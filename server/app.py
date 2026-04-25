@@ -173,8 +173,6 @@ def _build_app():
 
 > **Key Insight**: While the greedy model seems fast, its "Efficiency" is an illusion built on socioeconomic exclusion. Our **Fair-GRPO-RLVR** agent learns that true recovery must be equitable to be sustainable.
 """
-umbers (which causes bias). Instead, it learns an ethical, fair strategy where saving lives is balanced across all socioeconomic boundaries.
-"""
 
     # ── Custom Simplified Gradio UI ──────────────────────────────────────────
     with gr.Blocks(title="FairRecovery++ Simulator", theme=gr.themes.Soft()) as gradio_app:
