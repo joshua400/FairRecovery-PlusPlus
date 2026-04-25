@@ -23,55 +23,88 @@ configure_logging(json_output=True, log_level="INFO")
 
 
 def _build_app():
-    if _OPENENV_AVAILABLE:
-        return create_app(FairRecoveryEnvironment, FairRecoveryAction,
-                          FairRecoveryObservation, env_name="fairrecovery",
-                          max_concurrent_envs=1)
+    if not _OPENENV_AVAILABLE:
+        from fastapi import FastAPI, Request
+        from fastapi.responses import JSONResponse
+        from typing import Optional
 
-    from fastapi import FastAPI, Request
-    from fastapi.responses import JSONResponse
-    from typing import Optional
+        app = FastAPI(title="FairRecovery++ RL Environment", version="2.0.0")
+        _env = FairRecoveryEnvironment()
 
-    app = FastAPI(title="FairRecovery++ RL Environment", version="2.0.0",
-                  description="Adaptive multi-agent post-disaster recovery RL environment.")
-    _env = FairRecoveryEnvironment()
+        @app.post("/reset")
+        async def reset(difficulty: str = "medium", episode_id: Optional[str] = None):
+            return _env.reset(difficulty=difficulty, episode_id=episode_id).model_dump()
 
-    @app.post("/reset", response_model=None)
-    async def reset(difficulty: str = "medium", episode_id: Optional[str] = None):
-        return _env.reset(difficulty=difficulty, episode_id=episode_id).model_dump()
-
-    @app.post("/step", response_model=None)
-    async def step(request: Request):
-        try:
+        @app.post("/step")
+        async def step(request: Request):
             payload = await request.json()
             action = FairRecoveryAction(**payload)
-        except Exception as exc:
-            return JSONResponse(
-                status_code=400,
-                content={"error": f"Invalid action payload: {exc}"},
-            )
-        try:
             return _env.step(action).model_dump()
-        except Exception as exc:
-            return JSONResponse(
-                status_code=400,
-                content={"error": f"step failed: {exc}"},
-            )
 
-    @app.get("/state")
-    async def state():
-        return _env.state.model_dump()
+        @app.get("/health")
+        async def health():
+            return {"status": "ok"}
 
-    @app.get("/schema")
-    async def schema():
-        return {"action": FairRecoveryAction.model_json_schema(),
-                "observation": FairRecoveryObservation.model_json_schema()}
+        return app
 
-    @app.get("/health")
-    async def health():
-        return {"status": "ok", "env": "FairRecovery++", "version": "2.0.0"}
+    from openenv.core.env_server.http_server import create_fastapi_app
+    from openenv.core.env_server.web_interface import (
+        WebInterfaceManager,
+        load_environment_metadata,
+        get_quick_start_markdown,
+    )
+    from openenv.core.env_server.gradio_ui import build_gradio_app
+    from openenv.core.env_server.gradio_theme import OPENENV_GRADIO_THEME, OPENENV_GRADIO_CSS
+    import gradio as gr
 
-    return app
+    # 1. Base FastAPI app
+    fastapi_app = create_fastapi_app(
+        FairRecoveryEnvironment,
+        FairRecoveryAction,
+        FairRecoveryObservation,
+        max_concurrent_envs=1,
+    )
+
+    # 2. Metadata & Manager
+    metadata = load_environment_metadata(FairRecoveryEnvironment, "fairrecovery")
+    
+    # 3. Manual README loading to ensure it's not empty
+    readme_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "README.md")
+    readme_content = ""
+    if os.path.exists(readme_path):
+        with open(readme_path, "r", encoding="utf-8") as f:
+            readme_content = f.read()
+            # Strip YAML header if present for the web UI
+            if readme_content.startswith("---"):
+                parts = readme_content.split("---", 2)
+                if len(parts) >= 3:
+                    readme_content = parts[2].strip()
+
+    web_manager = WebInterfaceManager(
+        FairRecoveryEnvironment,
+        FairRecoveryAction,
+        FairRecoveryObservation,
+        metadata,
+    )
+
+    # 4. Build Gradio app
+    gradio_blocks = build_gradio_app(
+        web_manager,
+        FairRecoveryAction,
+        FairRecoveryObservation,
+        metadata,
+        title="FairRecovery++ Playground",
+        quick_start_md=readme_content,
+    )
+
+    # 5. Mount
+    return gr.mount_gradio_app(
+        fastapi_app,
+        gradio_blocks,
+        path="/web",
+        theme=OPENENV_GRADIO_THEME,
+        css=OPENENV_GRADIO_CSS,
+    )
 
 
 app = _build_app()
