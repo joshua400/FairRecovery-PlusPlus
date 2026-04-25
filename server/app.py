@@ -20,8 +20,41 @@ except ImportError:
 from fairrecovery_env.models import FairRecoveryAction, FairRecoveryObservation
 from fairrecovery_env.logging_config import configure_logging
 from server.fairrecovery_environment import FairRecoveryEnvironment
+from inference import greedy_policy, fairness_aware_policy
+import requests
+import json
+import re
 
 configure_logging(json_output=True, log_level="INFO")
+
+def llm_policy(obs: FairRecoveryObservation):
+    """Real-time LLM inference using HF API. Falls back to heuristic if API fails."""
+    hf_token = os.environ.get("HF_TOKEN")
+    if not hf_token:
+        return fairness_aware_policy(obs)
+        
+    try:
+        # Build a prompt describing the state
+        zones_str = '\\n'.join([f"Zone {z.zone_id}: damage={z.damage:.2f}, vulnerable={z.vulnerable_ratio:.2f}" for z in obs.zones])
+        prompt = f"System: You are an AI allocating resources fairly. Respond with JSON action.\\nUser: Day {obs.day}. Budget {obs.budget_left}. Zones:\\n{zones_str}\\nWhat is your next action?"
+        
+        response = requests.post(
+            "https://api-inference.huggingface.co/models/meta-llama/Llama-3.2-3B-Instruct",
+            headers={"Authorization": f"Bearer {hf_token}"},
+            json={"inputs": prompt, "parameters": {"max_new_tokens": 100, "temperature": 0.1}},
+            timeout=5
+        )
+        if response.status_code == 200:
+            text = response.json()[0]["generated_text"]
+            match = re.search(r'\\{.*?\\}', text, re.DOTALL)
+            if match:
+                data = json.loads(match.group())
+                return FairRecoveryAction(**data)
+    except Exception as e:
+        print(f"LLM API failed, falling back to fairness heuristic: {e}")
+        
+    return fairness_aware_policy(obs)
+
 
 
 def _build_app():
@@ -74,7 +107,7 @@ def _build_app():
         total_reward = 0.0
         final_fairness = 0.0
         
-        policy_fn = greedy_policy if policy_type == "Baseline (Greedy)" else fairness_aware_policy
+        policy_fn = greedy_policy if policy_type == "Baseline (Greedy)" else llm_policy
         
         while not done and step_count < 30:
             action = policy_fn(obs)
