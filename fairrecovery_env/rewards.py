@@ -1,9 +1,11 @@
-FairRecovery++ — Reward Engine (Fair-GRPO-RLVR).
+"""
+FairRecovery++ - Reward Engine (Fair-GRPO-RLVR).
 
-Computes dense, verifiable, formula-based rewards — no learned reward model.
+Computes dense, verifiable, formula-based rewards - no learned reward model.
 Implements the Fair-GRPO-RLVR multi-objective reinforcement learning framework.
 
 R_total = w_exec*R_exec + w_fair*R_fair + w_safe*R_safe
+"""
 
 from __future__ import annotations
 import structlog
