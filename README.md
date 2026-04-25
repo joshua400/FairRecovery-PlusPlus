@@ -32,8 +32,8 @@ base_path: /web
 FairRecovery++ trains LLMs to make fair, long-horizon decisions in dynamic real-world systems by combining adaptive multi-agent environments with verifiable RL rewards. Built for the [Meta × OpenEnv × Hugging Face × PyTorch Hackathon](https://www.scaler.com/school-of-technology/meta-pytorch-hackathon).
 
 **Links:**
-- [HF Space (Live Demo)](https://huggingface.co/spaces/<your-user>/fairrecovery) — *to be deployed*
-- [Demo Video (60-90s)](#demo) — *to be added*
+- [HF Space (Live Demo)](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus)
+- [Google Colab (Judge's Demo)](https://colab.research.google.com/github/joshua400/FairRecovery-PlusPlus/blob/main/FairRecovery_PlusPlus_Demo.ipynb)
 - [Architecture Documentation](#architecture)
 - [API Reference](#api-usage-examples)
 - [Reward Design](#reward-design)
