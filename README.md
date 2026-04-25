@@ -1,3 +1,12 @@
+---
+title: FairRecovery++
+emoji: 🏗️
+colorFrom: blue
+colorTo: green
+sdk: docker
+pinned: false
+---
+
 # 🏗️ FairRecovery++: Escaping the Fairness Trap with Fair-GRPO-RLVR
 
 [![Hugging Face Space](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Space-blue)](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus)
