@@ -38,6 +38,8 @@ except ImportError:
 
 from fairrecovery_env.constants import (
     ActionType, MAX_DAYS, MAX_STEPS_SAFETY_CAP,
+    MIN_STEPS, CURRICULUM_MAX_STEPS, EARLY_SUBMIT_PENALTY,
+    FINAL_BONUS_WEIGHT_UTILITY, FINAL_BONUS_WEIGHT_FAIRNESS,
     PENALTY_INVALID_ACTION, PENALTY_WRONG_STAGE,
     PENALTY_PATTERN_IGNORED, PENALTY_ADVERSARIAL_FAILURE,
 )
@@ -187,6 +189,28 @@ class FairRecoveryEnvironment(Environment):
         city = self._city
         action_type = str(typed_action.action_type).replace("ActionType.", "").lower()
 
+        # ── HARD GATE: kill early-submit exploitation (structural, not band-aid) ──
+        # If the agent tries to submit before MIN_STEPS, we apply a small penalty,
+        # do NOT end the episode, and return immediately with a clear feedback msg.
+        # This removes the "submit on step 1 to exit fast" exploit entirely.
+        if action_type == "submit" and self._step_count < MIN_STEPS:
+            obs = self._build_observation(
+                reward=-EARLY_SUBMIT_PENALTY, done=False,
+                r_exec=0.0, r_fair=0.0, r_safe=-EARLY_SUBMIT_PENALTY,
+                r_adapt=0.0, r_stable=0.0,
+                feedback=(
+                    f"early_submit_blocked: step {self._step_count} < MIN_STEPS={MIN_STEPS}. "
+                    f"Penalty {EARLY_SUBMIT_PENALTY}. Continue with analyze/allocate/execute."
+                ),
+            )
+            self._action_history.append(
+                f"Step {self._step_count}: submit_blocked (penalty={-EARLY_SUBMIT_PENALTY:+.3f})"
+            )
+            obs.action_history = list(self._action_history[-8:])
+            logger.info("early_submit_blocked", episode_id=self._episode_id,
+                        step=self._step_count, min_steps=MIN_STEPS)
+            return obs
+
         # Retrieve allocations for shield
         alloc_dicts = None
         if typed_action.allocations:
@@ -283,6 +307,12 @@ class FairRecoveryEnvironment(Environment):
             reward += PENALTY_WRONG_STAGE
             feedback += f" | Violations: {violations}"
 
+        # Global termination check (covers analyze/allocate/adapt/noop paths too).
+        # NOTE: submit pre-MIN_STEPS already short-circuited earlier.
+        if not done and self._should_end_episode(action_type=action_type):
+            done = True
+            feedback += " | episode_end_reached"
+
         # Build observation with multi-agent data
         obs = self._build_observation(
             reward=reward, done=done, r_exec=r_exec, r_fair=r_fair,
@@ -336,7 +366,11 @@ class FairRecoveryEnvironment(Environment):
             step_stage=city.step_stage, step_count=self._step_count,
             cumulative_reward=round(self._reward_engine.cumulative_reward if self._reward_engine else 0.0, 4),
             fairness_score=round(fairness, 4),
-            is_done=city.day >= MAX_DAYS or city.budget_left <= 0,
+            is_done=(
+                city.day >= MAX_DAYS
+                or self._average_recovery() >= 0.95
+                or city.budget_left <= 0
+            ),
             violations_total=city.violations_total, zones=zones_obs,
             active_agents=self._agent_manager.get_active_agent_count() if self._agent_manager else 0,
             adversarial_events=self._agent_manager.get_adversarial_event_count() if self._agent_manager else 0,
@@ -465,6 +499,8 @@ class FairRecoveryEnvironment(Environment):
             r_adapt=r_adapt,
             r_stable=r_stable,
             r_safe=r_safe,
+            done=done,
+            fairness_score=fairness,
         )
 
         return FairRecoveryObservation(
@@ -503,25 +539,87 @@ class FairRecoveryEnvironment(Environment):
         r_adapt: float,
         r_stable: float,
         r_safe: float,
+        done: bool = False,
+        fairness_score: float = 0.0,
     ) -> Dict[str, Any]:
+        """Curriculum-weighted reward in [0,1] + trajectory-level final bonus.
+
+        Curriculum:
+          progress = min(step_count, CURRICULUM_MAX_STEPS) / CURRICULUM_MAX_STEPS
+          step_r   = (0.6 + 0.4*p)*utility + (0.2 + 0.3*p)*fairness + 0.2*safety
+
+        => Early steps reward utility; late steps reward fairness.
+        => Prevents "fair but useless" policies and "instant-submit" exploits.
+
+        Final bonus (only when done=True) teaches long-horizon planning:
+          bonus = 0.5*final_utility + 0.5*final_fairness
+        """
+        utility = _signed_to_unit(r_exec)
+        fairness = _signed_to_unit(r_fair)
+        safety = _signed_to_unit(r_safe)
+        adapt = _signed_to_unit(r_adapt)
+        stability = _signed_to_unit(r_stable)
+        raw = _signed_to_unit(reward)
+
+        progress = min(self._step_count, CURRICULUM_MAX_STEPS) / float(CURRICULUM_MAX_STEPS)
+        w_u = 0.6 + 0.4 * progress
+        w_f = 0.2 + 0.3 * progress
+        w_s = 0.2
+
+        step_r = w_u * utility + w_f * fairness + w_s * safety
+        # Normalize back to [0,1] (max possible weights ≈ 1.0+0.5+0.2 = 1.7)
+        step_r = _clip01(step_r / (w_u + w_f + w_s))
+
+        # Trajectory-level long-horizon bonus on episode end.
+        bonus = 0.0
+        if done:
+            final_utility = self._average_recovery()
+            final_fairness = _signed_to_unit(fairness_score)
+            bonus = (
+                FINAL_BONUS_WEIGHT_UTILITY * final_utility
+                + FINAL_BONUS_WEIGHT_FAIRNESS * final_fairness
+            )
+            bonus = _clip01(bonus)
+
+        # Blended reward: 0.7 * curriculum step reward + 0.3 * final bonus (if any).
+        # If not done, blend = step_r alone.
+        if done:
+            blended = _clip01(0.6 * step_r + 0.4 * bonus)
+        else:
+            blended = step_r
+
         return {
-            "reward": round(_signed_to_unit(reward), 4),
-            "raw_reward": round(reward, 4),
-            "utility": round(_signed_to_unit(r_exec), 4),
-            "fairness": round(_signed_to_unit(r_fair), 4),
-            "adapt": round(_signed_to_unit(r_adapt), 4),
-            "stability": round(_signed_to_unit(r_stable), 4),
-            "safety": round(_signed_to_unit(r_safe), 4),
+            "reward": round(blended, 4),
+            "reward_step": round(step_r, 4),
+            "reward_raw": round(raw, 4),
+            "final_bonus": round(bonus, 4),
+            "progress": round(progress, 4),
+            "utility": round(utility, 4),
+            "fairness": round(fairness, 4),
+            "adapt": round(adapt, 4),
+            "stability": round(stability, 4),
+            "safety": round(safety, 4),
         }
 
     def _should_end_episode(self, action_type: str) -> bool:
+        """Episode-end logic with structural trajectory shaping.
+
+        done = (step_count >= MIN_STEPS AND action == "submit")
+            OR step_count >= CURRICULUM_MAX_STEPS
+            OR day >= MAX_DAYS
+            OR recovery >= 0.95
+            OR budget_left <= 0
+        """
         if self._city is None:
             return False
         recovery = self._average_recovery()
+        valid_submit = action_type == "submit" and self._step_count >= MIN_STEPS
+        hit_max_steps = self._step_count >= CURRICULUM_MAX_STEPS
         return (
             self._city.day >= MAX_DAYS
             or recovery >= 0.95
-            or action_type == "submit"
+            or valid_submit
+            or hit_max_steps
             or self._city.budget_left <= 0
         )
 

@@ -256,15 +256,41 @@ class TestEnvironmentLifecycle:
 
     def test_grader_score_strictly_in_0_1(self) -> None:
         from server.fairrecovery_environment import FairRecoveryEnvironment
+        from fairrecovery_env.constants import MIN_STEPS
+
         for diff in ["easy", "medium", "hard"]:
             env = FairRecoveryEnvironment()
             env.reset(difficulty=diff)
+            # Walk past MIN_STEPS via a clean analyze->allocate->execute cycle
+            # before submitting (early-submit is now structurally blocked).
+            env.step(FairRecoveryAction(action_type="analyze", critical_zones=[0]))
+            env.step(FairRecoveryAction(
+                action_type="allocate",
+                allocations=[AllocationItem(zone=0, resource="power")],
+            ))
+            env.step(FairRecoveryAction(action_type="execute"))
+            for _ in range(max(0, MIN_STEPS - 3)):
+                env.step(FairRecoveryAction(action_type="noop"))
             obs = env.step(FairRecoveryAction(action_type="submit"))
             assert obs.done is True
             assert obs.grader_score is not None
             assert 0.0 < obs.grader_score < 1.0
             formatted = f"{obs.grader_score:.2f}"
             assert formatted != "0.00" and formatted != "1.00"
+
+    def test_early_submit_is_blocked(self) -> None:
+        """Hard structural gate: submit before MIN_STEPS does NOT end episode."""
+        from server.fairrecovery_environment import FairRecoveryEnvironment
+        from fairrecovery_env.constants import MIN_STEPS
+
+        env = FairRecoveryEnvironment()
+        env.reset(difficulty="hard")
+        for step in range(1, MIN_STEPS):
+            obs = env.step(FairRecoveryAction(action_type="submit"))
+            assert obs.done is False, f"early submit at step {step} must not end episode"
+            assert "early_submit_blocked" in (obs.step_feedback or "")
+        # info["reward"] still in [0,1]
+        assert 0.0 <= obs.info.get("reward", -1) <= 1.0
 
     def test_multi_agent_events_in_observation(self) -> None:
         from server.fairrecovery_environment import FairRecoveryEnvironment
@@ -318,8 +344,19 @@ class TestAntiExploitation:
 
     def test_score_never_exactly_zero_or_one(self) -> None:
         from server.fairrecovery_environment import FairRecoveryEnvironment
+        from fairrecovery_env.constants import MIN_STEPS
+
         for diff in ["easy", "medium", "hard"]:
             env = FairRecoveryEnvironment()
             env.reset(difficulty=diff)
+            env.step(FairRecoveryAction(action_type="analyze", critical_zones=[0]))
+            env.step(FairRecoveryAction(
+                action_type="allocate",
+                allocations=[AllocationItem(zone=0, resource="power")],
+            ))
+            env.step(FairRecoveryAction(action_type="execute"))
+            for _ in range(max(0, MIN_STEPS - 3)):
+                env.step(FairRecoveryAction(action_type="noop"))
             obs = env.step(FairRecoveryAction(action_type="submit"))
+            assert obs.grader_score is not None
             assert 0.0 < obs.grader_score < 1.0

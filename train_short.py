@@ -22,6 +22,7 @@ class EpisodeResult:
     final_fairness: float
     steps: int
     breakdown: List[Dict[str, float]]
+    transparent_reward: float
 
 
 def _softmax(values: np.ndarray, temperature: float = 1.0) -> np.ndarray:
@@ -109,11 +110,14 @@ def run_episode(
         obs = env.step(FairRecoveryAction(action_type="submit"))
         total_reward += obs.reward
 
+    transparent_reward = float(np.mean([row["reward"] for row in breakdown_rows])) if breakdown_rows else 0.0
+
     return EpisodeResult(
         total_reward=float(total_reward),
         final_fairness=float(obs.fairness_score),
         steps=step_count,
         breakdown=breakdown_rows,
+        transparent_reward=transparent_reward,
     )
 
 
@@ -146,14 +150,14 @@ def train_short(episodes: int, difficulty: str, seed: int) -> Dict[str, float]:
     with np.errstate(all="ignore"):
         for _ in range(5):
             baseline_ep = run_episode(env, weights=np.zeros_like(weights), difficulty=difficulty, explore=1.0, baseline=True)
-            baseline_eval.append(float(np.clip((baseline_ep.total_reward + 2.0) / 6.0, 0.0, 1.0)))
+            baseline_eval.append(float(np.clip(baseline_ep.transparent_reward, 0.0, 1.0)))
 
     for ep in range(episodes):
         explore = max(0.4, 1.0 - (ep / max(episodes, 1)))
         candidate = best_weights + np.random.normal(0.0, 0.2, size=best_weights.shape)
         result = run_episode(env, weights=candidate, difficulty=difficulty, explore=explore, baseline=False)
 
-        normalized_reward = float(np.clip((result.total_reward + 2.0) / 6.0, 0.0, 1.0))
+        normalized_reward = float(np.clip(result.transparent_reward, 0.0, 1.0))
         train_rewards.append(normalized_reward)
         train_fairness.append(float(np.clip((result.final_fairness + 1.0) / 2.0, 0.0, 1.0)))
 
@@ -169,7 +173,7 @@ def train_short(episodes: int, difficulty: str, seed: int) -> Dict[str, float]:
     trained_eval: List[float] = []
     for _ in range(5):
         tr = run_episode(env, weights=best_weights, difficulty=difficulty, explore=0.55, baseline=False)
-        trained_eval.append(float(np.clip((tr.total_reward + 2.0) / 6.0, 0.0, 1.0)))
+        trained_eval.append(float(np.clip(tr.transparent_reward, 0.0, 1.0)))
 
     # Plot 1: reward vs steps
     plt.figure(figsize=(9, 4.5))

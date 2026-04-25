@@ -16,7 +16,7 @@ tags:
   - pytorch
   - meta
 pinned: false
-short_description: OpenEnv multi-agent RL env for fair, long-horizon disaster-recovery planning
+short_description: OpenEnv multi-agent RL env for disaster-recovery
 base_path: /web
 ---
 

@@ -34,6 +34,20 @@ MAX_STEPS_SAFETY_CAP: Final[int] = 50 # hard cap on total steps
 DEFAULT_SEED: Final[int] = 42
 
 # ──────────────────────────────────────────────────────────────────────────────
+# Curriculum / Trajectory Shaping (post-hoc structural fix)
+# ──────────────────────────────────────────────────────────────────────────────
+# MIN_STEPS  — agent MUST take at least this many steps before `submit` is honored.
+#              Submitting earlier is a no-op + small penalty (does NOT end episode).
+# CURRICULUM_MAX_STEPS — denominator for curriculum-progress weighting.
+# FINAL_BONUS_WEIGHT_UTILITY / _FAIRNESS — applied once on episode end (long-horizon).
+# EARLY_SUBMIT_PENALTY — small immediate penalty for trying to exit early.
+MIN_STEPS: Final[int] = 4
+CURRICULUM_MAX_STEPS: Final[int] = 12
+EARLY_SUBMIT_PENALTY: Final[float] = 0.15
+FINAL_BONUS_WEIGHT_UTILITY: Final[float] = 0.5
+FINAL_BONUS_WEIGHT_FAIRNESS: Final[float] = 0.5
+
+# ──────────────────────────────────────────────────────────────────────────────
 # Resource Definitions
 # ──────────────────────────────────────────────────────────────────────────────
 RESOURCE_COSTS: Final[dict] = {
