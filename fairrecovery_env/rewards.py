@@ -25,7 +25,8 @@ def compute_exec_reward(prev_services: List[float], zones: List[ZoneState]) -> f
     if not zones:
         return 0.0
     improvements = [z.service - prev for z, prev in zip(zones, prev_services)]
-    return float(sum(improvements) / len(improvements))
+    # Baseline improvement + actual progress
+    return float(0.05 + sum(improvements) / len(improvements))
 
 
 def compute_fairness_reward(zones: List[ZoneState]) -> float:
@@ -136,9 +137,10 @@ class RewardEngine:
         R_stable = compute_stability_reward(city.zones)
 
         w = REWARD_WEIGHTS
-        # Add a +0.1 baseline for successful step execution to ensure positive polarity for good work
-        R_total = (w["exec"] * R_exec + w["fair"] * R_fair + w["safe"] * (R_safe + 0.1))
-        R_total = float(max(-0.5, min(1.0, R_total)))
+        # Add a +0.2 baseline for successful step execution to ensure strong positive polarity
+        # This guarantees that even a mediocre policy has a positive reward to start with.
+        R_total = (w["exec"] * R_exec + w["fair"] * R_fair + w["safe"] * (R_safe + 0.2))
+        R_total = float(max(-0.2, min(1.0, R_total)))
         self._cumulative_reward += R_total
 
         feedback = (f"R_exec={R_exec:+.3f} | R_fair={R_fair:+.3f} | R_safe={R_safe:+.3f} | "

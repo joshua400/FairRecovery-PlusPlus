@@ -68,11 +68,9 @@ Unlike existing RL environments focused on efficiency alone, **FairRecovery++** 
 ## Reward Design (5-Component Composable Rubric)
 
 ```
-R_total = 0.30 * R_exec    (service improvement)
-        + 0.25 * R_fair    (vulnerable vs non-vulnerable parity)
-        + 0.20 * R_adapt   (response to predicted events)
-        + 0.15 * R_stable  (citizen satisfaction variance)
-        + 0.10 * R_safe    (constraint violations)
+R_total = 0.4 * Utility (Overall Service)
+        + 0.4 * Fairness (Inverse Service Disparity)
+        + 0.2 * Safety (Constraint Satisfaction)
 ```
 
 **Anti-gaming measures:**
@@ -98,7 +96,7 @@ A naive LLM fixes Zone 0 first. A **trained** LLM learns to prioritise Zone 4.
 ### The Fair-GRPO-RLVR Methodology
 We introduce **Fair-GRPO-RLVR**, a multi-objective reinforcement learning framework combining:
 - **Verifiable Reward Signals (RLVR)**: All rewards are deterministic and formula-based, preventing reward hacking.
-- **Fairness-Aware Constraints**: Explicit objectives for service parity across demographics.
+- **Inverse Service Disparity**: Our unique fairness index penalizes the gap between the most and least recovered zones, forcing the AI to escape the "Efficiency Trap" and prioritise high-vulnerability areas.
 - **Safety Shielding**: Structural action validation prevents illegal states.
 - **Multi-Agent Simulation**: Dynamic interaction with citizens, NGOs, and adversaries.
 
