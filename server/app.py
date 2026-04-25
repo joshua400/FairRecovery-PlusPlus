@@ -6,6 +6,7 @@ Mirrors hallucination-detector-gym server/app.py pattern exactly.
 
 from __future__ import annotations
 import os, sys
+from typing import Optional
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
@@ -25,7 +26,6 @@ configure_logging(json_output=True, log_level="INFO")
 def _build_app():
     from fastapi import FastAPI, Request
     from fastapi.responses import JSONResponse, RedirectResponse
-    from typing import Optional
     import gradio as gr
 
     app = FastAPI(title="FairRecovery++ RL Environment", version="2.0.0")
