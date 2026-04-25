@@ -290,7 +290,7 @@ for i in range(5):
     services_b = [z.service for z in env_b.state.zones]
     mean_b = sum(services_b) / len(services_b)
     disp_b = sum(abs(s - mean_b) for s in services_b) / len(services_b)
-    b_fairness = max(0.0, 1.0 - disp_b)
+    b_fairness = 1.0 - disp_b
     b_utility = mean_b
 
     # Trained
