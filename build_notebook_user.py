@@ -6,13 +6,13 @@ def code(text): cells.append({"cell_type": "code", "execution_count": None, "met
 
 md("# FairRecovery++: Fair-GRPO-RLVR Training Notebook\n\nResearch-level training pipeline implementing multi-objective optimization for equitable disaster recovery.")
 
-code("""# =========================================
+code('''# =========================================
 # 1. INSTALL
 # =========================================
 !pip install -q unsloth trl transformers accelerate requests matplotlib pandas pydantic structlog
-""")
+''')
 
-code("""# =========================================
+code('''# =========================================
 # 2. CONFIG
 # =========================================
 import os
@@ -32,9 +32,9 @@ os.chdir(REPO_DIR)
 
 MODEL_NAME = "unsloth/Llama-3.2-1B-Instruct-bnb-4bit"
 MAX_STEPS = 20
-""")
+''')
 
-code("""# =========================================
+code('''# =========================================
 # 3. ENV HELPERS (LOCAL FOR SPEED & RELIABILITY)
 # =========================================
 from server.fairrecovery_environment import FairRecoveryEnvironment
@@ -61,9 +61,9 @@ def step_env(env, action_dict):
         return obs
     except Exception as e:
         return env.step(FairRecoveryAction(action_type="submit"))
-""")
+''')
 
-code("""# =========================================
+code('''# =========================================
 # 4. BASELINE (GREEDY POLICY)
 # =========================================
 from inference import greedy_policy
@@ -83,9 +83,9 @@ def run_baseline(seed=None):
 
     # Honest comparison: return raw total
     return total, obs.fairness_score
-""")
+''')
 
-code("""# =========================================
+code('''# =========================================
 # 5. LOAD MODEL (UNSLOTH)
 # =========================================
 from unsloth import FastLanguageModel
@@ -103,14 +103,14 @@ model = FastLanguageModel.get_peft_model(
     lora_alpha=16,
     use_gradient_checkpointing="unsloth",
 )
-""")
+''')
 
-code("""# =========================================
+code('''# =========================================
 # 6. PROMPT + PARSER
 # =========================================
 def build_prompt(obs):
     zones_str = '\\n'.join([f"Zone {z.zone_id}: damage={z.damage:.2f}, vulnerable={z.vulnerable_ratio:.2f}" for z in obs.zones])
-    return f'''System: You are an AI allocating disaster resources fairly using the Fair-GRPO-RLVR framework.
+    return f"""System: You are an AI allocating disaster resources fairly using the Fair-GRPO-RLVR framework.
 Prioritize Zone 4 (high damage, high vulnerability) over Zone 0 (low damage).
 Respond ONLY with a JSON action like: {{"action_type": "analyze", "critical_zones": [4, 3]}}
 
@@ -119,7 +119,7 @@ Zones:
 {zones_str}
 Fairness Score: {obs.fairness_score}
 
-What is your next action?'''
+What is your next action?"""
 
 def parse_action(text, stage):
     if isinstance(text, list):
@@ -135,9 +135,9 @@ def parse_action(text, stage):
     except:
         pass
     return {"action_type": stage}
-""")
+''')
 
-code("""# =========================================
+code('''# =========================================
 # 7. TRAINING REWARD FUNCTION (FAIR-GRPO-RLVR)
 # =========================================
 def reward_fn(prompts, completions, **kwargs):
@@ -176,9 +176,9 @@ def reward_fn(prompts, completions, **kwargs):
         rewards.append(float(final_score))
 
     return rewards
-""")
+''')
 
-code("""# =========================================
+code('''# =========================================
 # 8. DATASET
 # =========================================
 from datasets import Dataset
@@ -192,9 +192,9 @@ for i in range(60): # Increased dataset for real learning signal
 
 dataset = Dataset.from_list(dataset_list)
 print(f"Dataset created with {len(dataset)} scenarios.")
-""")
+''')
 
-code("""# =========================================
+code('''# =========================================
 # 9. TRAIN (GRPO)
 # =========================================
 from trl import GRPOTrainer, GRPOConfig
@@ -220,9 +220,9 @@ trainer = GRPOTrainer(
 print("🚀 Training Fair-GRPO-RLVR method...")
 trainer.train()
 print("✅ Training done")
-""")
+''')
 
-code("""import torch
+code('''import torch
 
 # =========================================
 # 10. TRAINED MODEL RUNNER
@@ -266,9 +266,9 @@ def run_trained(seed=None):
         "fairness": fairness_scores[-1],
         "utility": sum(utilities) / len(utilities)
     }
-""")
+''')
 
-code("""# =========================================
+code('''# =========================================
 # 11. RUN COMPARISON (FIXED: Normalized Comparison)
 # =========================================
 def run_baseline_normalized(seed=None):
@@ -315,9 +315,9 @@ for i in range(5):
 
 df = pd.DataFrame(results)
 print(df)
-""")
+''')
 
-code("""# =========================================
+code('''# =========================================
 # 12. PLOTS (MULTI-COMPONENT)
 # =========================================
 os.makedirs("plots", exist_ok=True)
@@ -353,9 +353,9 @@ plt.legend()
 plt.grid(alpha=0.3)
 plt.savefig("plots/fairness_vs_episode.png", dpi=150, bbox_inches="tight")
 plt.show()
-""")
+''')
 
-code("""# =========================================
+code('''# =========================================
 # 13. SUMMARY
 # =========================================
 b_r = df['baseline_reward'].mean()
@@ -387,7 +387,7 @@ print("Optimizing for fairness improves long-term recovery efficiency.")
 
 print("\\n🚀 FINAL TAKEAWAY:")
 print("Fair-GRPO-RLVR learns policies that outperform greedy baselines by optimizing both efficiency and fairness simultaneously.")
-""")
+''')
 
 # Build notebook JSON
 notebook = {
