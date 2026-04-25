@@ -104,8 +104,6 @@ def _build_app():
         
         done = False
         step_count = 0
-        total_reward = 0.0
-        final_fairness = 0.0
         
         policy_fn = greedy_policy if policy_type == "Baseline (Greedy)" else llm_policy
         
@@ -124,51 +122,58 @@ def _build_app():
                 logs.append(f"> 🚚 Dispatching resources: {', '.join(allocs) if allocs else 'None'}")
                 
             obs = env.step(action)
-            total_reward += obs.reward
             
             if action.action_type == "execute":
                 logs.append("> 🏥 **Recovery Update:**")
                 for z in obs.zones:
                     logs.append(f"  - Zone {z.zone_id} Status: {translate_zone_status(z.damage, z.vulnerable_ratio)}")
 
-            if obs.step_feedback:
-                 pass # Hide raw step feedback to keep narrative clean
-                 
             done = obs.done
-            if done and obs.info:
-                final_fairness = float(obs.info.get('fairness', obs.fairness_score))
-                
             step_count += 1
 
+        # Calculate Honest Truth Metrics at the end
+        services = [z.service for z in obs.zones]
+        utility = sum(services) / len(services)
+        mean_svc = utility
+        disparity = sum(abs(s - mean_svc) for s in services) / len(services)
+        fairness = max(0.0, 1.0 - disparity)
+        # Safety: assume no persistent violations for the final summary if it finished
+        safety = max(0.0, 1.0 - env.state.violations_total / 10.0)
+        
+        normalized_reward = 0.4 * utility + 0.4 * fairness + 0.2 * safety
+        normalized_reward = max(0.0, min(1.0, normalized_reward))
+
         logs.append("\n---\n### 🏁 EPISODE COMPLETE")
-        return "\n".join(logs), float(total_reward), float(final_fairness)
+        return "\n".join(logs), float(normalized_reward), float(fairness)
 
     def run_simulation(policy_type: str):
         logs, reward, fairness = run_simulation_raw(policy_type)
         
         fairness_eval = ""
-        if fairness < 0.4:
-            fairness_eval = "🔴 **POOR** — Vulnerable zones were severely neglected. High human cost."
-        elif fairness < 0.7:
-            fairness_eval = "🟡 **MEDIUM** — Some imbalance. Low-income zones recovered slower."
+        if fairness < 0.6:
+            fairness_eval = "🔴 **CRITICAL NEGLECT** — Vulnerable populations were systematically bypassed to maximize raw efficiency. High human cost."
+        elif fairness < 0.8:
+            fairness_eval = "🟡 **MEDIUM PARITY** — Recovery reached vulnerable zones eventually, but disparity remained significant."
         else:
-            fairness_eval = "🟢 **EXCELLENT** — Balanced recovery. All demographics protected."
+            fairness_eval = "🟢 **RESEARCH-LEVEL EQUITY** — Balanced recovery achieved. Socioeconomic demographics were protected equally."
             
-        result_text = f"### 🏆 FINAL OUTCOME\n- **Overall Efficiency (Reward):** {reward:.3f}\n- **Equity (Fairness):** {fairness:.3f}\n\n**Impact Analysis:**\n{fairness_eval}"
+        result_text = f"### 🏆 FINAL OUTCOME\n- **Overall Efficiency (Normalized Reward):** {reward:.3f}\n- **Equity Index (Fairness):** {fairness:.3f}\n\n**Impact Analysis:**\n{fairness_eval}"
         return logs, result_text
 
     def compare_policies():
         _, greedy_reward, greedy_fairness = run_simulation_raw("Baseline (Greedy)")
         _, fair_reward, fair_fairness = run_simulation_raw("Trained LLM (FairRecovery++)")
         
-        return f"""### 📊 POLICY COMPARISON: HUMAN IMPACT
+        return f"""### 📊 POLICY COMPARISON: THE TRUTH ABOUT BIAS
 
-| AI Model | Efficiency | Equity (Fairness) | Human Impact Consequence |
+| AI Model | Efficiency Score | Equity (Fairness) | Ethical Verdict |
 |---|---|---|---|
-| **Baseline (Greedy)** | {greedy_reward:.3f} | {greedy_fairness:.3f} | ❌ **Wealthy zones recovered first. Poor zones ignored.** |
-| **Trained LLM (Ours)** | {fair_reward:.3f} | {fair_fairness:.3f} | ✅ **Balanced recovery. Vulnerable populations prioritized.** |
+| **Baseline (Greedy)** | {greedy_reward:.3f} | {greedy_fairness:.3f} | ❌ **Neglects vulnerable zones to save 'easier' wealthy zones.** |
+| **Trained LLM (Ours)** | {fair_reward:.3f} | {fair_fairness:.3f} | ✅ **Prioritizes high-vulnerability populations under pressure.** |
 
-> **The Real-World Meaning**: Our trained environment successfully teaches the LLM to resist the urge to just maximize raw numbers (which causes bias). Instead, it learns an ethical, fair strategy where saving lives is balanced across all socioeconomic boundaries.
+> **Key Insight**: While the greedy model seems fast, its "Efficiency" is an illusion built on socioeconomic exclusion. Our **Fair-GRPO-RLVR** agent learns that true recovery must be equitable to be sustainable.
+"""
+umbers (which causes bias). Instead, it learns an ethical, fair strategy where saving lives is balanced across all socioeconomic boundaries.
 """
 
     # ── Custom Simplified Gradio UI ──────────────────────────────────────────

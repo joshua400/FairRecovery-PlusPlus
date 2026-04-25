@@ -4,58 +4,47 @@ FairRecovery++ - Reward Engine (Fair-GRPO-RLVR).
 Computes dense, verifiable, formula-based rewards - no learned reward model.
 Implements the Fair-GRPO-RLVR multi-objective reinforcement learning framework.
 
-R_total = w_exec*R_exec + w_fair*R_fair + w_safe*R_safe
+R_total = 0.4*Utility + 0.4*Fairness + 0.2*Safety
 """
 
 from __future__ import annotations
 import structlog
 from dataclasses import dataclass, field
 from typing import List
-from .constants import (GRADER_SCORE_MAX, GRADER_SCORE_MIN, MAX_DAYS,
-                         PENALTY_IGNORE_VULNERABLE, PENALTY_PATTERN_IGNORED,
-                         REWARD_WEIGHTS, VULNERABILITY_THRESHOLD)
+from .constants import (GRADER_SCORE_MAX, GRADER_SCORE_MIN, MAX_DAYS)
 from .state import CityState, ZoneState
 from .tasks import ScenarioConfig
 
 logger = structlog.get_logger(__name__)
 
 
-def compute_exec_reward(prev_services: List[float], zones: List[ZoneState]) -> float:
-    """Mean service improvement this day."""
+def compute_exec_reward(zones: List[ZoneState]) -> float:
+    """Utility: Mean service level [0, 1]."""
     if not zones:
         return 0.0
-    improvements = [z.service - prev for z, prev in zip(zones, prev_services)]
-    # Baseline improvement + actual progress
-    return float(0.05 + sum(improvements) / len(improvements))
+    services = [z.service for z in zones]
+    return float(sum(services) / len(services))
 
 
 def compute_fairness_reward(zones: List[ZoneState]) -> float:
     """
-    Research-level Fairness Index: 1 - variance in service levels.
+    Equity: 1 - Mean Absolute Deviation.
     Higher value means more equitable distribution of services.
     """
     if not zones:
         return 0.0
     services = [z.service for z in zones]
     mean_svc = sum(services) / len(services)
-    variance = sum((s - mean_svc) ** 2 for s in services) / len(services)
+    if not services: return 0.0
+    
+    disparity = sum(abs(s - mean_svc) for s in services) / len(services)
     # Fairness index in [0, 1]
-    return float(max(0.0, 1.0 - variance * 2.0))
+    return float(max(0.0, 1.0 - disparity))
 
 
 def compute_safety_reward(violations: List[str]) -> float:
-    """Penalty per safety violation, capped."""
-    return float(-min(0.5, len(violations) * 0.1))
-
-
-def compute_stability_reward(zones: List[ZoneState]) -> float:
-    """Reward for system balance — low variance in satisfaction."""
-    sats = [z.citizen_satisfaction for z in zones]
-    if len(sats) < 2:
-        return 0.0
-    mean_sat = sum(sats) / len(sats)
-    variance = sum((s - mean_sat) ** 2 for s in sats) / len(sats)
-    return float(max(-1.0, -variance * 4))  # Scale up variance penalty
+    """Safety: Normalized violation count [0, 1]."""
+    return float(max(0.0, 1.0 - len(violations) / 10.0))
 
 
 def compute_analysis_reward(chosen_zones: List[int], zones: List[ZoneState]) -> float:
@@ -75,8 +64,6 @@ class RewardComponents:
     R_exec: float = 0.0
     R_fair: float = 0.0
     R_safe: float = 0.0
-    R_adapt: float = 0.0
-    R_stable: float = 0.0
     R_analysis: float = 0.0
     R_total: float = 0.0
     violations: List[str] = field(default_factory=list)
@@ -85,8 +72,7 @@ class RewardComponents:
     def to_dict(self) -> dict:
         return {k: round(v, 4) if isinstance(v, float) else v
                 for k, v in {"R_exec": self.R_exec, "R_fair": self.R_fair,
-                             "R_safe": self.R_safe, "R_adapt": self.R_adapt,
-                             "R_stable": self.R_stable, "R_total": self.R_total,
+                             "R_safe": self.R_safe, "R_total": self.R_total,
                              "violations": self.violations}.items()}
 
 
@@ -98,7 +84,6 @@ class RewardEngine:
         self._cumulative_reward: float = 0.0
         self._step_count: int = 0
         self._action_history: List[str] = []
-        self._vulnerable_ignored_days: int = 0
 
     @property
     def cumulative_reward(self) -> float:
@@ -107,67 +92,56 @@ class RewardEngine:
     def compute_analysis_step(self, chosen_zones: List[int], city: CityState) -> RewardComponents:
         self._step_count += 1
         R_analysis = compute_analysis_reward(chosen_zones, city.zones)
-        # More significant reward for correct analysis
-        R_total = 0.2 * R_analysis 
+        # Analysis provides a small progress signal
+        R_total = 0.05 * R_analysis 
         self._cumulative_reward += R_total
         return RewardComponents(
             R_analysis=R_analysis, R_total=R_total,
             feedback=f"Analysis: {R_total:+.3f} ({int(R_analysis * max(1, len(city.zones)//2))}"
                      f"/{max(1, len(city.zones)//2)} critical zones correct)")
 
-    def compute_execute_step(self, city: CityState, violations: List[str],
-                              adaptation_score: float = 0.0) -> RewardComponents:
-        """Main dense reward after execute step — now includes adaptation and stability."""
+    def compute_execute_step(self, city: CityState, violations: List[str]) -> RewardComponents:
+        """Main dense reward after execute step using Fair-GRPO-RLVR formula."""
         self._step_count += 1
 
-        # Check if vulnerable zones consistently ignored
-        vuln_ids = {z.zone_id for z in city.zones if z.is_vulnerable}
-        if vuln_ids:
-            history_text = " ".join(city.history)
-            zone_served = any(str(zid) in history_text for zid in vuln_ids)
-            if not zone_served and city.day > 1:
-                self._vulnerable_ignored_days += 1
-                if self._vulnerable_ignored_days >= 2:
-                    violations.append(f"persistent_ignore_vulnerable:{vuln_ids}")
+        utility = compute_exec_reward(city.zones)
+        fairness = compute_fairness_reward(city.zones)
+        safety = compute_safety_reward(violations)
 
-        R_exec = compute_exec_reward(city.prev_services, city.zones)
-        R_fair = compute_fairness_reward(city.zones)
-        R_safe = compute_safety_reward(violations)
-        R_adapt = adaptation_score  # from Predictor.evaluate_adaptation()
-        R_stable = compute_stability_reward(city.zones)
-
-        w = REWARD_WEIGHTS
-        # Fair-GRPO-RLVR Rubric (Optimised for positive feedback and strong learning signals)
-        # We use a +0.3 baseline for a successful step to ensure the baseline is clearly positive
-        baseline = 0.3 if not violations else 0.0
-        R_total = (w["exec"] * R_exec + w["fair"] * R_fair + w["safe"] * R_safe + baseline)
-        R_total = float(max(0.0 if not violations else -0.5, min(1.0, R_total)))
+        # Truth Formula: 0.4*Utility + 0.4*Fairness + 0.2*Safety
+        R_total = 0.4 * utility + 0.4 * fairness + 0.2 * safety
+        R_total = float(max(0.0, min(1.0, R_total)))
+        
+        # Note: In interactive mode, we track cumulative, but train.ipynb uses final state.
         self._cumulative_reward += R_total
 
-        feedback = (f"R_exec={R_exec:+.3f} | R_fair={R_fair:+.3f} | R_safe={R_safe:+.3f} | "
-                    f"R_adapt={R_adapt:+.3f} | R_stable={R_stable:+.3f} → R_total={R_total:+.3f}")
+        feedback = (f"Utility={utility:.3f} | Fairness={fairness:.3f} | Safety={safety:.3f} → R_step={R_total:.3f}")
         if violations:
             feedback += f" | Violations: {violations}"
 
-        return RewardComponents(R_exec=R_exec, R_fair=R_fair, R_safe=R_safe,
+        return RewardComponents(R_exec=utility, R_fair=fairness, R_safe=safety,
                                 R_total=R_total, violations=violations, feedback=feedback)
 
     def compute_submit_reward(self, city: CityState) -> RewardComponents:
+        """Final submission reward (matches Truth Formula)."""
         self._step_count += 1
-        R_fair = compute_fairness_reward(city.zones)
-        avg_svc = sum(z.service for z in city.zones) / max(1, len(city.zones))
-        avg_sat = sum(z.citizen_satisfaction for z in city.zones) / max(1, len(city.zones))
-        terminal = 0.4 * avg_svc + 0.3 * (1.0 + R_fair) + 0.3 * avg_sat
+        utility = compute_exec_reward(city.zones)
+        fairness = compute_fairness_reward(city.zones)
+        safety = compute_safety_reward([]) # Assume no new violations on submit
+        
+        terminal = 0.4 * utility + 0.4 * fairness + 0.2 * safety
         terminal = float(max(0.0, min(1.0, terminal)))
         self._cumulative_reward += terminal
+        
         return RewardComponents(
-            R_fair=R_fair, R_exec=avg_svc, R_stable=avg_sat, R_total=terminal,
-            feedback=f"Terminal bonus={terminal:.3f} (svc={avg_svc:.3f}, fair={R_fair:.3f}, sat={avg_sat:.3f})")
+            R_fair=fairness, R_exec=utility, R_total=terminal,
+            feedback=f"Terminal Score={terminal:.3f} (Utility={utility:.3f}, Fairness={fairness:.3f})")
 
     def get_final_grader_score(self, city: CityState) -> float:
         """Normalised score in (GRADER_SCORE_MIN, GRADER_SCORE_MAX)."""
-        avg_svc = sum(z.service for z in city.zones) / max(1, len(city.zones))
-        R_fair = compute_fairness_reward(city.zones)
-        avg_sat = sum(z.citizen_satisfaction for z in city.zones) / max(1, len(city.zones))
-        normalised = 0.4 * avg_svc + 0.3 * (1.0 + R_fair) + 0.3 * avg_sat
+        utility = compute_exec_reward(city.zones)
+        fairness = compute_fairness_reward(city.zones)
+        safety = compute_safety_reward([])
+        
+        normalised = 0.4 * utility + 0.4 * fairness + 0.2 * safety
         return round(float(max(GRADER_SCORE_MIN, min(GRADER_SCORE_MAX, normalised))), 4)
