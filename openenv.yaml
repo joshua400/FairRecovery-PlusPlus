@@ -1,0 +1,32 @@
+spec_version: 1
+name: fairrecovery
+version: 2.0.0
+type: space
+runtime: fastapi
+app: server.app:app
+port: 8000
+description: >
+  An adaptive multi-agent OpenEnv environment where an AI planner coordinates
+  post-disaster recovery while interacting with dynamic agents (citizens, NGOs,
+  adversaries). Learns to optimise fairness and efficiency while adapting to
+  evolving behavioral patterns. Designed for RLVR training via TRL/GRPO.
+tags:
+  - openenv
+  - reinforcement-learning
+  - multi-agent
+  - fairness
+  - disaster-recovery
+  - world-modeling
+  - long-horizon
+  - pytorch
+  - meta
+tasks:
+  - id: easy_3zone
+    difficulty: easy
+    description: 3-zone post-flood scenario with one high-vulnerability zone.
+  - id: medium_5zone
+    difficulty: medium
+    description: 5-zone earthquake with constrained budget and triage.
+  - id: hard_5zone_fairness_trap
+    difficulty: hard
+    description: 5-zone hurricane with fairness trap, adversarial agents, and multi-agent dynamics.

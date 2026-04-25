@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openenv-fairrecovery"
+version = "2.0.0"
+description = "An adaptive multi-agent OpenEnv environment for training AI agents to coordinate post-disaster recovery with fairness and efficiency"
+readme = "README.md"
+license = {text = "BSD-3-Clause"}
+requires-python = ">=3.10"
+authors = [
+    {name = "FairRecovery Team"},
+]
+keywords = ["openenv", "reinforcement-learning", "multi-agent", "fairness", "disaster-recovery", "rlvr"]
+
+dependencies = [
+    "openenv-core[core]>=0.2.3",
+    "fastapi>=0.104.0",
+    "uvicorn>=0.24.0",
+    "pydantic>=2.0.0",
+    "numpy>=1.24.0",
+    "structlog>=23.0.0",
+    "websocket-client>=1.6.0",
+    "requests>=2.31.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.0.0",
+    "httpx>=0.24.0",
+]
+train = [
+    "torch>=2.1.0",
+    "transformers>=4.36.0",
+    "trl>=0.7.0",
+    "unsloth",
+    "datasets>=2.14.0",
+    "matplotlib>=3.7.0",
+]
+
+[project.scripts]
+server = "server.app:main"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["fairrecovery_env*", "server*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "strict"
+testpaths = ["tests"]
