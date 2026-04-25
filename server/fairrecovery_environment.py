@@ -490,8 +490,6 @@ class FairRecoveryEnvironment(Environment):
             reward=reward,
             r_exec=r_exec,
             r_fair=r_fair,
-            r_adapt=r_adapt,
-            r_stable=r_stable,
             r_safe=r_safe,
             done=done,
             fairness_score=fairness,
