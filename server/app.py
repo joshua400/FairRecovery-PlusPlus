@@ -31,10 +31,6 @@ def _build_app():
     app = FastAPI(title="FairRecovery++ RL Environment", version="2.0.0")
     _env = FairRecoveryEnvironment()
 
-    @app.get("/")
-    async def root():
-        return RedirectResponse(url="/web")
-
     @app.post("/reset")
     async def reset(difficulty: str = "medium", episode_id: Optional[str] = None):
         return _env.reset(difficulty=difficulty, episode_id=episode_id).model_dump()
@@ -181,7 +177,7 @@ def _build_app():
             outputs=[result_output]
         )
 
-    return gr.mount_gradio_app(app, gradio_app, path="/web")
+    return gr.mount_gradio_app(app, gradio_app, path="/")
 
 
 app = _build_app()
