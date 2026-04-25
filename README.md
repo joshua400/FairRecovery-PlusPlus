@@ -122,17 +122,17 @@ Prompt --> LLM generates action (JSON) --> Environment executes
 ### Reward vs Training Step
 Shows reward improvement over GRPO training iterations compared to random baseline.
 
-![Reward vs Episode](https://raw.githubusercontent.com/joshua400/FairRecovery-PlusPlus/plots-branch/plots/reward_vs_episode.png)
+`plots/reward_vs_episode.png`
 
 ### Fairness: Baseline vs Trained
 Demonstrates that the trained agent achieves better fairness scores (closer to 0) than the random baseline.
 
-![Fairness vs Episode](https://raw.githubusercontent.com/joshua400/FairRecovery-PlusPlus/plots-branch/plots/fairness_vs_episode.png)
+`plots/fairness_vs_episode.png`
 
 ### Component Rewards Breakdown
 Shows how R_exec (utility) and R_fair (fairness) improve after training.
 
-![Component Rewards](https://raw.githubusercontent.com/joshua400/FairRecovery-PlusPlus/plots-branch/plots/component_rewards.png)
+`plots/component_rewards.png`
 
 ---
 
