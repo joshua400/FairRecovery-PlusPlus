@@ -143,38 +143,39 @@ code("""# =========================================
 def reward_fn(prompts, completions, **kwargs):
     rewards = []
 
-    for output in completions:
+    for prompt, output in zip(prompts, completions):
         # 1. Scenario Variation (Curriculum Learning)
         difficulty = random.choice(["easy", "medium", "hard"])
         env, obs = reset_env(difficulty=difficulty)
         
+        # FIX: Run the FULL episode using the model's parsed actions.
+        # This ensures the model is rewarded for its OWN logic, not a heuristic.
         action_dict = parse_action(output, obs.step_stage)
 
         for _ in range(MAX_STEPS):
             obs = step_env(env, action_dict)
             if obs.done: break
-            from inference import fairness_aware_policy
-            action_dict = fairness_aware_policy(obs).model_dump()
+            # Re-parse from completion for subsequent stages (stage-specific parsing)
+            action_dict = parse_action(output, obs.step_stage)
 
         # 2. Research-Level Fairness Metric (Inverse Service Disparity)
         services = [z.service for z in env.state.zones]
         mean_service = sum(services) / len(services)
         disparity = sum(abs(s - mean_service) for s in services) / len(services)
-        fairness = 1.0 - disparity # Higher = Better Equity
+        fairness = max(0.0, 1.0 - disparity) # Higher = Better Equity
 
         # 3. Multi-objective Components
-        utility = sum(services) / len(services)
-        safety = -obs.info.get("violations", 0) / 10.0
+        utility = mean_service
+        safety = max(0.0, 1.0 - obs.info.get("violations", 0) / 10.0) # Normalized safety
         
         # 4. Total Reward with Curriculum Scaling
         total = (0.4 * utility + 0.4 * fairness + 0.2 * safety)
-        if difficulty == "hard":
-            total *= 1.2
-        elif difficulty == "easy":
-            total *= 0.8
+        
+        # FIX: Curriculum weighting without breaking [0,1] normalization
+        difficulty_weight = {"easy": 0.8, "medium": 1.0, "hard": 1.1}.get(difficulty, 1.0)
             
         # 5. Stronger Normalization (Preserves Policy Differences)
-        final_score = max(0.0, min(1.0, total))
+        final_score = max(0.0, min(1.0, total * difficulty_weight))
         rewards.append(float(final_score))
 
     return rewards
@@ -186,7 +187,7 @@ code("""# =========================================
 from datasets import Dataset
 
 dataset_list = []
-for i in range(15):
+for i in range(60): # Increased dataset for real learning signal
     env, obs = reset_env(seed=42 + i) 
     dataset_list.append({
         "prompt": [{"role": "user", "content": build_prompt(obs)}]
@@ -271,35 +272,45 @@ def run_trained(seed=None):
 """)
 
 code("""# =========================================
-# 11. RUN COMPARISON
+# 11. RUN COMPARISON (FIXED: Normalized Comparison)
 # =========================================
+def run_baseline_normalized(seed=None):
+    """Run baseline and return the SAME normalized metric used in training."""
+    env, obs = reset_env(seed=seed, difficulty="hard")
+
+    for _ in range(MAX_STEPS):
+        from inference import greedy_policy
+        action = greedy_policy(obs)
+        obs = env.step(action)
+        if obs.done: break
+
+    services = [z.service for z in env.state.zones]
+    mean_s = sum(services) / len(services)
+    disp = sum(abs(s - mean_s) for s in services) / len(services)
+    fairness = max(0.0, 1.0 - disp)
+    utility = mean_s
+    safety = max(0.0, 1.0 - obs.info.get("violations", 0) / 10.0)
+    normalized_reward = max(0.0, min(1.0, 0.4 * utility + 0.4 * fairness + 0.2 * safety))
+
+    return {
+        "reward": normalized_reward, 
+        "fairness": fairness,
+        "utility": utility
+    }
+
 results = []
 
 for i in range(5):
     test_seed = 2000 + i
-    # Baseline
-    env_b, obs_b = reset_env(seed=test_seed, difficulty="hard")
-    b_reward = 0
-    for _ in range(MAX_STEPS):
-        from inference import greedy_policy
-        action = greedy_policy(obs_b)
-        obs_b = env_b.step(action)
-        b_reward += obs_b.reward
-        if obs_b.done: break
-    
-    services_b = [z.service for z in env_b.state.zones]
-    mean_b = sum(services_b) / len(services_b)
-    disp_b = sum(abs(s - mean_b) for s in services_b) / len(services_b)
-    b_fairness = 1.0 - disp_b
-    b_utility = mean_b
-
+    # Baseline (Normalized for honest comparison)
+    b_res = run_baseline_normalized(seed=test_seed)
     # Trained
     t_res = run_trained(seed=test_seed)
 
     results.append({
-        "baseline_reward": b_reward,
-        "baseline_fairness": b_fairness,
-        "baseline_utility": b_utility,
+        "baseline_reward": b_res["reward"],
+        "baseline_fairness": b_res["fairness"],
+        "baseline_utility": b_res["utility"],
         "trained_reward": t_res["reward"],
         "trained_fairness": t_res["fairness"],
         "trained_utility": t_res["utility"]
@@ -357,35 +368,27 @@ print("Multi-objective RL with fairness, safety, and utility optimization")
 b_r = df['baseline_reward'].mean()
 t_r = df['trained_reward'].mean()
 b_f = df['baseline_fairness'].mean()
-t_f = df['trained_fairness'].mean()
-
-print(f"\\nReward:")
-print(f"Baseline: {b_r:.3f}")
-print(f"Trained : {t_r:.3f}")
-
-print(f"\\nFairness (1 - Disparity):")
-print(f"Baseline: {b_f:.3f}")
-print(f"Trained : {t_f:.3f}")
-
 improvement_r = t_r - b_r
-percent_r = (improvement_r / (abs(b_r) + 1e-5)) * 100
 improvement_f = t_f - b_f
+percent_r = (improvement_r / (abs(b_r) + 1e-5)) * 100
 percent_f = (improvement_f / (abs(b_f) + 1e-5)) * 100
 
-print(f"\\n📊 Relative Improvement:")
-print(f"Reward Gain: +{improvement_r:.2f} ({percent_r:.1f}%)")
-print(f"Fairness Gain: +{improvement_f:.2f} ({percent_f:.1f}%)")
+print("\\n=== FINAL RESULTS (Fair-GRPO-RLVR) ===")
+print(f"Reward   — Baseline: {b_r:.3f} | Trained: {t_r:.3f} | Δ {improvement_r:+.3f} ({percent_r:+.1f}%)")
+print(f"Fairness — Baseline: {b_f:.3f} | Trained: {t_f:.3f} | Δ {improvement_f:+.3f} ({percent_f:+.1f}%)")
 
-print("\\n🚨 BASELINE ISSUE (GREEDY):")
-print("Greedy policy prioritizes low-risk Zone 0, ignoring vulnerable populations in Zone 4.")
-
-print("\\n✅ MODEL IMPROVEMENT (FAIR-GRPO-RLVR):")
-print("Trained model balances recovery speed with equity, ensuring vulnerable zones are prioritized.")
+# Honest conditional verdict
+if improvement_r > 0 and improvement_f > 0:
+    print("\\n✅ Model improved on BOTH reward and fairness.")
+elif improvement_r > 0:
+    print(f"\\n⚠️ Reward improved but fairness REGRESSED by {abs(improvement_f):.3f}. Check reward weights.")
+elif improvement_f > 0:
+    print(f"\\n⚠️ Fairness improved but reward REGRESSED by {abs(improvement_r):.3f}.")
+else:
+    print("\\n❌ Model did not outperform baseline. Consider more training steps or larger dataset.")
 
 print("\\n🏆 Key Insight:")
 print("Optimizing for fairness improves long-term recovery efficiency.")
-
-print(f"\\n✅ Total Improvement: +{improvement_r:.3f} Reward | +{improvement_f:.3f} Fairness")
 
 print("\\n🚀 FINAL TAKEAWAY:")
 print("Fair-GRPO-RLVR learns policies that outperform greedy baselines by optimizing both efficiency and fairness simultaneously.")
