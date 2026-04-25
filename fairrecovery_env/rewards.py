@@ -31,15 +31,15 @@ def compute_exec_reward(prev_services: List[float], zones: List[ZoneState]) -> f
 def compute_fairness_reward(zones: List[ZoneState]) -> float:
     """
     Research-level Fairness Index: 1 - variance in service levels.
-    Ensures the agent cannot win by ignoring the hardest zones.
+    Higher value means more equitable distribution of services.
     """
     if not zones:
         return 0.0
     services = [z.service for z in zones]
     mean_svc = sum(services) / len(services)
     variance = sum((s - mean_svc) ** 2 for s in services) / len(services)
-    # Higher variance = lower fairness score
-    return float(max(-1.0, -variance * 5.0)) 
+    # Fairness index in [0, 1]
+    return float(max(0.0, 1.0 - variance * 2.0))
 
 
 def compute_safety_reward(violations: List[str]) -> float:
@@ -106,7 +106,8 @@ class RewardEngine:
     def compute_analysis_step(self, chosen_zones: List[int], city: CityState) -> RewardComponents:
         self._step_count += 1
         R_analysis = compute_analysis_reward(chosen_zones, city.zones)
-        R_total = 0.1 * R_analysis
+        # More significant reward for correct analysis
+        R_total = 0.2 * R_analysis 
         self._cumulative_reward += R_total
         return RewardComponents(
             R_analysis=R_analysis, R_total=R_total,
@@ -135,8 +136,9 @@ class RewardEngine:
         R_stable = compute_stability_reward(city.zones)
 
         w = REWARD_WEIGHTS
-        R_total = (w["exec"] * R_exec + w["fair"] * R_fair + w["safe"] * R_safe)
-        R_total = float(max(-1.0, min(1.0, R_total)))
+        # Add a +0.1 baseline for successful step execution to ensure positive polarity for good work
+        R_total = (w["exec"] * R_exec + w["fair"] * R_fair + w["safe"] * (R_safe + 0.1))
+        R_total = float(max(-0.5, min(1.0, R_total)))
         self._cumulative_reward += R_total
 
         feedback = (f"R_exec={R_exec:+.3f} | R_fair={R_fair:+.3f} | R_safe={R_safe:+.3f} | "

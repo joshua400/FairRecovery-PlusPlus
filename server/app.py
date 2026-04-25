@@ -127,10 +127,8 @@ def _build_app():
             total_reward += obs.reward
             
             if action.action_type == "execute":
-                # Show updated status for the first 2 zones as an example
                 logs.append("> 🏥 **Recovery Update:**")
-                for i in range(min(2, len(obs.zones))):
-                    z = obs.zones[i]
+                for z in obs.zones:
                     logs.append(f"  - Zone {z.zone_id} Status: {translate_zone_status(z.damage, z.vulnerable_ratio)}")
 
             if obs.step_feedback:
