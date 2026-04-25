@@ -13,6 +13,7 @@ openenv-core[web]>=0.1.0
 
 # UI dependencies
 gradio>=4.0.0
+huggingface_hub<0.27.0
 
 # Optional: for local development only
 # pytest==8.3.2
