@@ -9,7 +9,10 @@ requests==2.32.3
 numpy==1.26.4
 
 # OpenEnv core — install from PyPI (latest stable)
-openenv-core>=0.1.0
+openenv-core[web]>=0.1.0
+
+# UI dependencies
+gradio>=4.0.0
 
 # Optional: for local development only
 # pytest==8.3.2
