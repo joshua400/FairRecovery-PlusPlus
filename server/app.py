@@ -182,12 +182,6 @@ def _build_app():
             with gr.Tab("Interactive Simulation"):
                 gr.Markdown("> **An OpenEnv environment that teaches LLMs to make fair resource allocation decisions under adversarial pressure, multi-agent dynamics, and long-horizon planning constraints.**")
                 
-                try:
-                    dashboard_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "assets", "dashboard.png")
-                    gr.Image(value=dashboard_path, show_label=False, interactive=False, height=300)
-                except:
-                    pass
-                
                 with gr.Row():
                     with gr.Column(scale=1):
                         gr.Markdown("### 🚨 The Fairness Trap (Hard Scenario)")

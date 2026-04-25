@@ -7,15 +7,13 @@ sdk: docker
 pinned: false
 ---
 
-<p align="center">
-  <img src="assets/dashboard.png" width="100%" />
-</p>
-
 # FairRecovery: Training an LLM to Make Fair Disaster Recovery Decisions
 
 After a flood, city authorities must decide: which neighborhood gets power restored first? Which gets medical units? The obvious answer — fix the easiest zones first — consistently leaves the most vulnerable people waiting the longest.
 
 We built **FairRecovery**, an OpenEnv RL environment where an LLM agent must allocate scarce resources (power, water, medical) across 5 city zones over 10 days, under budget constraints, while keeping vulnerable populations from falling behind.
+
+![FairRecovery++ Hero Image](assets/image.png)
 
 ## The Fairness Trap
 The environment features a mathematical **Fairness Trap**: Zone 4 is the most damaged (damage=0.92) AND the most vulnerable (96% vulnerable population). A naive, greedy agent optimizes Zone 0 (easiest to fix) and completely ignores Zone 4 to maximize raw utility. A trained agent learns to prioritize correctly.
