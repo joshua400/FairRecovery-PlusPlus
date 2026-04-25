@@ -1,0 +1,13 @@
+{
+  "engine": "ollama",
+  "model": "qwen2.5:7b",
+  "episodes": 2,
+  "baseline_avg_reward": 0.424,
+  "trained_avg_reward": 0.449,
+  "best_strategy": "balanced fairness + utility with low-noop behavior",
+  "strategy_counts": [
+    1.0,
+    1.0,
+    0.0
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "engine": "sarvam_chat_completions",
+  "model": "sarvam-105b",
+  "episodes": 32,
+  "min_steps": 4,
+  "max_steps": 12,
+  "baseline_avg_reward": 0.549,
+  "trained_avg_reward": 0.602,
+  "delta": 0.054,
+  "baseline_avg_steps": 12.0,
+  "trained_avg_steps": 12.0,
+  "baseline_early_submits": 0,
+  "trained_early_submits": 0,
+  "baseline_avg_final_fairness_unit": 0.537,
+  "trained_avg_final_fairness_unit": 0.539,
+  "best_strategy": "Medical-first equity: every allocate step, send 'medical' to the zone with highest vulnerable_ratio AND damage>0.25; never repeat the same zone twice in a row."
+}
