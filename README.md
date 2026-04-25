@@ -8,7 +8,7 @@ app_port: 7860
 ---
 # FairRecovery++ : Adaptive Multi-Agent Disaster Recovery Environment
 
-> **An OpenEnv environment that teaches LLMs to make fair resource allocation decisions under adversarial pressure, multi-agent dynamics, and long-horizon planning constraints.**
+> **Introducing Fair-GRPO-RLVR: A multi-objective reinforcement learning framework that teaches LLMs to make fair resource allocation decisions under adversarial pressure, multi-agent dynamics, and long-horizon planning constraints.**
 
 [![HF Space](https://img.shields.io/badge/HuggingFace-Space-blue)](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/joshua400/FairRecovery-PlusPlus/blob/main/train.ipynb)
@@ -24,6 +24,8 @@ After a disaster, AI systems optimizing for **efficiency alone** consistently ne
 - Adapting to adversarial disruptions that target vulnerable zones
 - Responding to citizen protests, NGO conflicts, and dynamic events
 - Planning across multi-day horizons where early mistakes compound
+
+Unlike existing RL environments focused on efficiency alone, **FairRecovery++** introduces fairness as a first-class objective, forcing agents to balance recovery speed with equitable outcomes.
 
 ---
 
@@ -92,6 +94,24 @@ R_total = 0.30 * R_exec    (service improvement)
 | Zone 4 | 0.92 | 0.08 | 0.96 | **CRITICAL** (most vulnerable, most damaged) |
 
 A naive LLM fixes Zone 0 first. A **trained** LLM learns to prioritise Zone 4.
+
+### The Fair-GRPO-RLVR Methodology
+We introduce **Fair-GRPO-RLVR**, a multi-objective reinforcement learning framework combining:
+- **Verifiable Reward Signals (RLVR)**: All rewards are deterministic and formula-based, preventing reward hacking.
+- **Fairness-Aware Constraints**: Explicit objectives for service parity across demographics.
+- **Safety Shielding**: Structural action validation prevents illegal states.
+- **Multi-Agent Simulation**: Dynamic interaction with citizens, NGOs, and adversaries.
+
+### Research-Level Fairness Metrics
+Our environment evaluates fairness using measurable service parity:
+`Fairness = 1 - Service_Variance(All_Zones)`
+This ensures the agent cannot simply "win" by ignoring the hardest zones.
+
+### Safety & Anti-Reward Hacking
+We explicitly prevent reward hacking using:
+- **Action Validation (Shield)**: Every action is pre-checked for budget and logic consistency.
+- **Fallback Policies**: Graceful degradation if the LLM generates invalid JSON.
+- **Multi-Reward Verification**: 5-component reward rubric ensures optimization of the *true* objective.
 
 ---
 
