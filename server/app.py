@@ -65,10 +65,7 @@ def _build_app():
         max_concurrent_envs=1,
     )
 
-    # 2. Metadata & Manager
-    metadata = load_environment_metadata(FairRecoveryEnvironment, "fairrecovery")
-    
-    # 3. Manual README loading to ensure it's not empty
+    # 2. Manual README loading to ensure it's not empty
     readme_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "README.md")
     readme_content = ""
     if os.path.exists(readme_path):
@@ -79,6 +76,11 @@ def _build_app():
                 parts = readme_content.split("---", 2)
                 if len(parts) >= 3:
                     readme_content = parts[2].strip()
+
+    # 3. Metadata & Manager
+    metadata = load_environment_metadata(FairRecoveryEnvironment, "fairrecovery")
+    # Patch metadata for the buggy openenv-core build_gradio_app
+    object.__setattr__(metadata, "readme_content", readme_content)
 
     web_manager = WebInterfaceManager(
         FairRecoveryEnvironment,
