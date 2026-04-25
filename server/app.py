@@ -31,6 +31,10 @@ def _build_app():
     app = FastAPI(title="FairRecovery++ RL Environment", version="2.0.0")
     _env = FairRecoveryEnvironment()
 
+    @app.get("/web")
+    async def web_redirect():
+        return RedirectResponse(url="/")
+
     @app.post("/reset")
     async def reset(difficulty: str = "medium", episode_id: Optional[str] = None):
         return _env.reset(difficulty=difficulty, episode_id=episode_id).model_dump()
