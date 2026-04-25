@@ -1,3 +1,11 @@
+---
+title: FairRecovery++
+emoji: 🌍
+colorFrom: blue
+colorTo: green
+sdk: docker
+app_port: 7860
+---
 # FairRecovery++ : Adaptive Multi-Agent Disaster Recovery Environment
 
 > **An OpenEnv environment that teaches LLMs to make fair resource allocation decisions under adversarial pressure, multi-agent dynamics, and long-horizon planning constraints.**
