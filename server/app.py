@@ -181,7 +181,19 @@ def _build_app():
             outputs=[result_output]
         )
 
-    return gr.mount_gradio_app(app, gradio_app, path="/")
+    # Re-add root redirects but ensure trailing slash for /ui/ 
+    # to prevent relative asset 404s (the cause of the blank screen).
+    @app.get("/")
+    async def root_redirect():
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url="/ui/")
+        
+    @app.get("/web")
+    async def old_web_redirect():
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url="/ui/")
+
+    return gr.mount_gradio_app(app, gradio_app, path="/ui")
 
 
 app = _build_app()
