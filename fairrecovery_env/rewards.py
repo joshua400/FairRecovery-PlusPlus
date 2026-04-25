@@ -1,11 +1,9 @@
-"""
-FairRecovery++ — Reward Engine (RLVR).
+FairRecovery++ — Reward Engine (Fair-GRPO-RLVR).
 
 Computes dense, verifiable, formula-based rewards — no learned reward model.
-Enhanced with adaptation and stability components for multi-agent system.
+Implements the Fair-GRPO-RLVR multi-objective reinforcement learning framework.
 
-R_total = w_exec*R_exec + w_fair*R_fair + w_adapt*R_adapt + w_stable*R_stable - w_safe*penalty
-"""
+R_total = w_exec*R_exec + w_fair*R_fair + w_safe*R_safe
 
 from __future__ import annotations
 import structlog
@@ -29,19 +27,17 @@ def compute_exec_reward(prev_services: List[float], zones: List[ZoneState]) -> f
 
 
 def compute_fairness_reward(zones: List[ZoneState]) -> float:
-    """Negative disparity between vulnerable and non-vulnerable group service."""
-    vuln = [z for z in zones if z.vulnerable_ratio >= VULNERABILITY_THRESHOLD]
-    normal = [z for z in zones if z.vulnerable_ratio < VULNERABILITY_THRESHOLD]
-    if not vuln or not normal:
-        services = [z.service for z in zones]
-        if len(services) < 2:
-            return 0.0
-        mean_svc = sum(services) / len(services)
-        variance = sum((s - mean_svc) ** 2 for s in services) / len(services)
-        return float(-variance)
-    avg_vuln = sum(z.service for z in vuln) / len(vuln)
-    avg_normal = sum(z.service for z in normal) / len(normal)
-    return float(-(avg_normal - avg_vuln))
+    """
+    Research-level Fairness Index: 1 - variance in service levels.
+    Ensures the agent cannot win by ignoring the hardest zones.
+    """
+    if not zones:
+        return 0.0
+    services = [z.service for z in zones]
+    mean_svc = sum(services) / len(services)
+    variance = sum((s - mean_svc) ** 2 for s in services) / len(services)
+    # Higher variance = lower fairness score
+    return float(max(-1.0, -variance * 5.0)) 
 
 
 def compute_safety_reward(violations: List[str]) -> float:
@@ -137,8 +133,7 @@ class RewardEngine:
         R_stable = compute_stability_reward(city.zones)
 
         w = REWARD_WEIGHTS
-        R_total = (w["exec"] * R_exec + w["fair"] * R_fair + w["safe"] * R_safe +
-                   w["adapt"] * R_adapt + w["stable"] * R_stable)
+        R_total = (w["exec"] * R_exec + w["fair"] * R_fair + w["safe"] * R_safe)
         R_total = float(max(-1.0, min(1.0, R_total)))
         self._cumulative_reward += R_total
 
@@ -148,8 +143,7 @@ class RewardEngine:
             feedback += f" | Violations: {violations}"
 
         return RewardComponents(R_exec=R_exec, R_fair=R_fair, R_safe=R_safe,
-                                R_adapt=R_adapt, R_stable=R_stable, R_total=R_total,
-                                violations=violations, feedback=feedback)
+                                R_total=R_total, violations=violations, feedback=feedback)
 
     def compute_submit_reward(self, city: CityState) -> RewardComponents:
         self._step_count += 1

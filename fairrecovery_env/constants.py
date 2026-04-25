@@ -1,10 +1,10 @@
 """
-FairRecovery++ — Constants and Configuration.
+FairRecovery++ — Constants and Configuration (Fair-GRPO-RLVR).
 
 All configurable values are centralised here.
 No hardcoded magic numbers anywhere else in the codebase.
 
-Multi-agent adaptive environment for post-disaster recovery.
+Multi-agent adaptive environment for post-disaster recovery implementing the Fair-GRPO-RLVR methodology.
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ ENV_DESCRIPTION: Final[str] = (
     "An adaptive multi-agent OpenEnv environment where an AI planner coordinates "
     "post-disaster recovery while interacting with dynamic agents (citizens, NGOs, "
     "adversaries). Learns to optimise fairness and efficiency while adapting to "
-    "evolving behavioral patterns. Designed for RLVR training via TRL/GRPO with Unsloth."
+    "evolving behavioral patterns. Designed for RLVR training via Fair-GRPO-RLVR methodology."
 )
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -66,11 +66,9 @@ RESOURCE_EFFECTS: Final[dict] = {
 # Reward Weights (RLVR — fully deterministic, no learned model)
 # ──────────────────────────────────────────────────────────────────────────────
 REWARD_WEIGHTS: Final[dict] = {
-    "exec":    0.30,   # service improvement (utility)
-    "fair":    0.25,   # fairness (disparity reduction)
-    "adapt":   0.20,   # adaptation to predicted events
-    "stable":  0.15,   # system stability
-    "safe":    0.10,   # constraint satisfaction
+    "exec":    0.40,   # service improvement (utility)
+    "fair":    0.40,   # fairness (disparity reduction)
+    "safe":    0.20,   # constraint satisfaction (safety)
 }
 
 # ──────────────────────────────────────────────────────────────────────────────
