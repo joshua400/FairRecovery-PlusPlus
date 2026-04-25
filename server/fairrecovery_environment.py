@@ -147,8 +147,7 @@ class FairRecoveryEnvironment(Environment):
                      initial_budget=self._city.budget_left,
                      initial_fairness=round(initial_fairness, 4))
 
-        obs = self._build_observation(reward=0.0, done=False, r_exec=0.0,
-                                       r_fair=0.0, r_safe=0.0, r_adapt=0.0, r_stable=0.0)
+        obs = self._build_observation(reward=0.0, done=False, r_exec=0.0, r_fair=0.0, r_safe=0.0)
         obs.step_feedback = (
             f"Episode started. Difficulty: {difficulty}. "
             f"Zones: {len(self._city.zones)}. Budget: {self._city.budget_left}. "
@@ -169,7 +168,7 @@ class FairRecoveryEnvironment(Environment):
         if check_timeout(self._step_count):
             return self._build_observation(
                 reward=PENALTY_INVALID_ACTION, done=True,
-                r_exec=0.0, r_fair=0.0, r_safe=-0.5, r_adapt=0.0, r_stable=0.0,
+                r_exec=0.0, r_fair=0.0, r_safe=-0.5,
                 feedback="Episode terminated: safety step cap exceeded.")
 
         # Parse action
@@ -260,13 +259,11 @@ class FairRecoveryEnvironment(Environment):
             self._apply_agent_effects()
 
             components = self._reward_engine.compute_execute_step(
-                city=city, violations=all_violations, adaptation_score=adapt_score)
+                city=city, violations=all_violations)
             reward = components.R_total
             r_exec = components.R_exec
             r_fair = components.R_fair
             r_safe = components.R_safe
-            r_adapt = components.R_adapt
-            r_stable = components.R_stable
             feedback = components.feedback
             city.record(f"executed | {feedback}")
             city.step_stage = "analyze"
@@ -289,7 +286,6 @@ class FairRecoveryEnvironment(Environment):
             components = self._reward_engine.compute_submit_reward(city=city)
             reward = components.R_total
             r_fair = components.R_fair
-            r_stable = components.R_stable
             feedback = components.feedback
             done = True
 
@@ -316,8 +312,7 @@ class FairRecoveryEnvironment(Environment):
         # Build observation with multi-agent data
         obs = self._build_observation(
             reward=reward, done=done, r_exec=r_exec, r_fair=r_fair,
-            r_safe=r_safe, r_adapt=r_adapt, r_stable=r_stable,
-            feedback=feedback, agent_events=self._last_events,
+            r_safe=r_safe, feedback=feedback, agent_events=self._last_events,
             predictions=prediction.to_dict() if prediction else None)
 
         # Rubric scoring (RFC 004)
@@ -466,8 +461,7 @@ class FairRecoveryEnvironment(Environment):
     # Observation Builders
     # ──────────────────────────────────────────────────────────────────────────
     def _build_observation(self, reward: float, done: bool, r_exec: float,
-                           r_fair: float, r_safe: float, r_adapt: float = 0.0,
-                           r_stable: float = 0.0, feedback: str = "",
+                           r_fair: float, r_safe: float, feedback: str = "",
                            agent_events: Optional[List[AgentEvent]] = None,
                            predictions: Optional[dict] = None) -> FairRecoveryObservation:
         city = self._city
@@ -511,8 +505,7 @@ class FairRecoveryEnvironment(Environment):
             steps_remaining=max(0, steps_remaining),
             cumulative_reward=round(cumulative, 4),
             r_exec=round(r_exec, 4), r_fair=round(r_fair, 4),
-            r_safe=round(r_safe, 4), r_adapt=round(r_adapt, 4),
-            r_stable=round(r_stable, 4),
+            r_safe=round(r_safe, 4),
             done=done, reward=round(reward, 4),
             info=info,
             agent_events=agent_events or [], predictions=predictions)
@@ -525,8 +518,6 @@ class FairRecoveryEnvironment(Environment):
                 reward=PENALTY_INVALID_ACTION,
                 r_exec=0.0,
                 r_fair=0.0,
-                r_adapt=0.0,
-                r_stable=0.0,
                 r_safe=-1.0,
             ),
         )
@@ -536,8 +527,6 @@ class FairRecoveryEnvironment(Environment):
         reward: float,
         r_exec: float,
         r_fair: float,
-        r_adapt: float,
-        r_stable: float,
         r_safe: float,
         done: bool = False,
         fairness_score: float = 0.0,
@@ -557,8 +546,6 @@ class FairRecoveryEnvironment(Environment):
         utility = _signed_to_unit(r_exec)
         fairness = _signed_to_unit(r_fair)
         safety = _signed_to_unit(r_safe)
-        adapt = _signed_to_unit(r_adapt)
-        stability = _signed_to_unit(r_stable)
         raw = _signed_to_unit(reward)
 
         progress = min(self._step_count, CURRICULUM_MAX_STEPS) / float(CURRICULUM_MAX_STEPS)
@@ -596,8 +583,6 @@ class FairRecoveryEnvironment(Environment):
             "progress": round(progress, 4),
             "utility": round(utility, 4),
             "fairness": round(fairness, 4),
-            "adapt": round(adapt, 4),
-            "stability": round(stability, 4),
             "safety": round(safety, 4),
         }
 
