@@ -21,12 +21,12 @@ In disaster recovery, optimizing for "Efficiency" (overall service restored) oft
 
 We introduce **Fair-GRPO-RLVR**, a multi-objective reinforcement learning framework that leverages:
 
-1.  **Group Relative Policy Optimization (GRPO)**: An efficient, multi-sample policy gradient method that optimizes for **Full-Trajectory outcomes**.
+1.  **Group Relative Policy Optimization (GRPO)**: An efficient, multi-sample policy gradient method tailored for complex decision-making.
 2.  **Verifiable Reward Signals (RLVR)**: Transparent, formula-based rewards that eliminate "reward model hacking."
-3.  **The Fairness Trap Simulation**: Our training environment artificially damages vulnerable zones (Zone 4) to force the model to learn equity-first policies.
+3.  **Inverse Service Disparity Index**: A novel fairness metric that penalizes the variance and gap between the most and least recovered zones.
 
 ### The Reward Formula
-$$R_{total} = 0.3 \cdot \text{Utility} + 0.6 \cdot \text{Fairness (Equity)} + 0.1 \cdot \text{Safety}$$
+$$R_{total} = 0.4 \cdot \text{Utility} + 0.4 \cdot \text{Fairness (Equity)} + 0.2 \cdot \text{Safety}$$
 
 ---
 
