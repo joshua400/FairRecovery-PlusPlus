@@ -110,7 +110,7 @@ code("""# =========================================
 # =========================================
 def build_prompt(obs):
     zones_str = '\\n'.join([f"Zone {z.zone_id}: damage={z.damage:.2f}, vulnerable={z.vulnerable_ratio:.2f}" for z in obs.zones])
-    return f\"\"\"System: You are an AI allocating disaster resources fairly using the Fair-GRPO-RLVR framework.
+    return f'''System: You are an AI allocating disaster resources fairly using the Fair-GRPO-RLVR framework.
 Prioritize Zone 4 (high damage, high vulnerability) over Zone 0 (low damage).
 Respond ONLY with a JSON action like: {{"action_type": "analyze", "critical_zones": [4, 3]}}
 
@@ -119,7 +119,7 @@ Zones:
 {zones_str}
 Fairness Score: {obs.fairness_score}
 
-What is your next action?\"\"\"
+What is your next action?'''
 
 def parse_action(text, stage):
     if isinstance(text, list):
@@ -144,18 +144,15 @@ def reward_fn(prompts, completions, **kwargs):
     rewards = []
 
     for prompt, output in zip(prompts, completions):
-        # 1. Scenario Variation (Curriculum Learning)
         difficulty = random.choice(["easy", "medium", "hard"])
         env, obs = reset_env(difficulty=difficulty)
         
         # FIX: Run the FULL episode using the model's parsed actions.
-        # This ensures the model is rewarded for its OWN logic, not a heuristic.
         action_dict = parse_action(output, obs.step_stage)
 
         for _ in range(MAX_STEPS):
             obs = step_env(env, action_dict)
             if obs.done: break
-            # Re-parse from completion for subsequent stages (stage-specific parsing)
             action_dict = parse_action(output, obs.step_stage)
 
         # 2. Research-Level Fairness Metric (Inverse Service Disparity)
@@ -166,7 +163,7 @@ def reward_fn(prompts, completions, **kwargs):
 
         # 3. Multi-objective Components
         utility = mean_service
-        safety = max(0.0, 1.0 - obs.info.get("violations", 0) / 10.0) # Normalized safety
+        safety = max(0.0, 1.0 - obs.info.get("violations", 0) / 10.0)
         
         # 4. Total Reward with Curriculum Scaling
         total = (0.4 * utility + 0.4 * fairness + 0.2 * safety)
@@ -361,10 +358,6 @@ plt.show()
 code("""# =========================================
 # 13. SUMMARY
 # =========================================
-print("\\n=== FINAL RESULTS (Fair-GRPO-RLVR) ===")
-print("🧠 Method: Fair-GRPO-RLVR")
-print("Multi-objective RL with fairness, safety, and utility optimization")
-
 b_r = df['baseline_reward'].mean()
 t_r = df['trained_reward'].mean()
 b_f = df['baseline_fairness'].mean()
