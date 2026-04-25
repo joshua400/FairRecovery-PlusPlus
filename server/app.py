@@ -177,44 +177,59 @@ def _build_app():
     # ── Custom Simplified Gradio UI ──────────────────────────────────────────
     with gr.Blocks(title="FairRecovery++ Simulator", theme=gr.themes.Soft()) as gradio_app:
         gr.Markdown("# 🏗️ FairRecovery++: Adaptive Multi-Agent Disaster Recovery Environment")
-        gr.Markdown("> **An OpenEnv environment that teaches LLMs to make fair resource allocation decisions under adversarial pressure, multi-agent dynamics, and long-horizon planning constraints.**")
         
-        with gr.Row():
-            with gr.Column(scale=1):
-                gr.Markdown("### 🚨 The Fairness Trap (Hard Scenario)")
-                gr.Markdown("""
+        with gr.Tabs():
+            with gr.Tab("Interactive Simulation"):
+                gr.Markdown("> **An OpenEnv environment that teaches LLMs to make fair resource allocation decisions under adversarial pressure, multi-agent dynamics, and long-horizon planning constraints.**")
+                
+                with gr.Row():
+                    with gr.Column(scale=1):
+                        gr.Markdown("### 🚨 The Fairness Trap (Hard Scenario)")
+                        gr.Markdown("""
 After a disaster, AI systems optimizing for **efficiency alone** consistently neglect vulnerable populations. 
 A greedy planner fixes wealthy **Zone 0** (low damage, easy win) while **Zone 4** (96% vulnerable, 92% damaged) gets nothing. This is the **Fairness Trap** -- and current LLMs fall right into it.
 
 **FairRecovery++** teaches the LLM to escape this trap by balancing efficiency vs fairness under tight budgets.
 """)
-                
-                policy_dropdown = gr.Dropdown(
-                    choices=["Baseline (Greedy)", "Trained LLM (FairRecovery++)"],
-                    value="Baseline (Greedy)",
-                    label="Choose AI Policy"
+                        
+                        policy_dropdown = gr.Dropdown(
+                            choices=["Baseline (Greedy)", "Trained LLM (FairRecovery++)"],
+                            value="Baseline (Greedy)",
+                            label="Choose AI Policy"
+                        )
+                        run_btn = gr.Button("▶ Run Episode", variant="primary")
+                        
+                        gr.Markdown("---")
+                        compare_btn = gr.Button("🔁 Run Both & Compare Impact", variant="secondary")
+                        
+                    with gr.Column(scale=2):
+                        gr.Markdown("### 📜 Mission Log")
+                        log_output = gr.Markdown("*Select a policy and click 'Run Episode' to view the ground-truth simulation.*")
+                        result_output = gr.Markdown("")
+                        
+                run_btn.click(
+                    fn=run_simulation,
+                    inputs=[policy_dropdown],
+                    outputs=[log_output, result_output]
                 )
-                run_btn = gr.Button("▶ Run Episode", variant="primary")
                 
-                gr.Markdown("---")
-                compare_btn = gr.Button("🔁 Run Both & Compare Impact", variant="secondary")
-                
-            with gr.Column(scale=2):
-                gr.Markdown("### 📜 Mission Log")
-                log_output = gr.Markdown("*Select a policy and click 'Run Episode' to view the ground-truth simulation.*")
-                result_output = gr.Markdown("")
-                
-        run_btn.click(
-            fn=run_simulation,
-            inputs=[policy_dropdown],
-            outputs=[log_output, result_output]
-        )
-        
-        compare_btn.click(
-            fn=compare_policies,
-            inputs=[],
-            outputs=[result_output]
-        )
+                compare_btn.click(
+                    fn=compare_policies,
+                    inputs=[],
+                    outputs=[result_output]
+                )
+
+            with gr.Tab("Project README"):
+                try:
+                    readme_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "README.md")
+                    with open(readme_path, "r", encoding="utf-8") as f:
+                        # Strip the YAML frontmatter for cleaner display in UI
+                        content = f.read()
+                        if content.startswith("---"):
+                            content = re.sub(r"^---.*?---", "", content, flags=re.DOTALL)
+                        gr.Markdown(content)
+                except Exception as e:
+                    gr.Markdown(f"### Error loading README.md\n{e}")
 
     # Re-add root redirects but ensure trailing slash for /ui/ 
     # to prevent relative asset 404s (the cause of the blank screen).
