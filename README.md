@@ -53,4 +53,4 @@ India's National Disaster Management Authority (NDMA) coordinates relief across 
 
 ## 🙏 Acknowledgements
 Built for the **OpenEnv Hackathon India 2026**.  
-Built with OpenEnv, HuggingFace TRL, Unsloth, and Gradio. 
+Built with OpenEnv, HuggingFace TRL, Unsloth, and Gradio.
