@@ -13,15 +13,15 @@ After a flood, city authorities must decide: which neighborhood gets power resto
 
 We built **FairRecovery**, an OpenEnv RL environment where an LLM agent must allocate scarce resources (power, water, medical) across 5 city zones over 10 days, under budget constraints, while keeping vulnerable populations from falling behind.
 
-![FairRecovery++ Dashboard](https://raw.githubusercontent.com/joshua400/FairRecovery-PlusPlus/main/assets/dashboard.png)
+![FairRecovery++ Dashboard](assets/dashboard.png)
 
 ## The Fairness Trap
 The environment features a mathematical **Fairness Trap**: Zone 4 is the most damaged (damage=0.92) AND the most vulnerable (96% vulnerable population). A naive, greedy agent optimizes Zone 0 (easiest to fix) and completely ignores Zone 4 to maximize raw utility. A trained agent learns to prioritize correctly.
 
 ### 📈 Learning to Prioritize
 <p align="center">
-  <img src="https://raw.githubusercontent.com/joshua400/FairRecovery-PlusPlus/main/assets/reward_vs_episode.png" width="45%" />
-  <img src="https://raw.githubusercontent.com/joshua400/FairRecovery-PlusPlus/main/assets/fairness_vs_episode.png" width="45%" />
+  <img src="assets/reward_vs_episode.png" width="45%" />
+  <img src="assets/fairness_vs_episode.png" width="45%" />
 </p>
 <p align="center"><i>Left: Reward growth over training | Right: Fairness index stabilization</i></p>
 
