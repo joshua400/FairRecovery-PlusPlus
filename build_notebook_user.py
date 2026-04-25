@@ -229,12 +229,7 @@ code('''import torch
 # =========================================
 def run_trained(seed=None):
     env, obs = reset_env(seed=seed, difficulty="hard")
-    total_reward = 0
     
-    # Tracking components
-    utilities = []
-    fairness_scores = []
-
     for _ in range(MAX_STEPS):
         prompt = build_prompt(obs)
         # Use higher temperature for better exploration during evaluation
@@ -250,21 +245,21 @@ def run_trained(seed=None):
         action_dict = parse_action(text, obs.step_stage)
 
         obs = step_env(env, action_dict)
-        total_reward += obs.reward
-        
-        # Track disparity-based fairness (clamped to non-negative)
-        services = [z.service for z in env.state.zones]
-        mean_s = sum(services) / len(services)
-        disp = sum(abs(s - mean_s) for s in services) / len(services)
-        fairness_scores.append(max(0.0, 1.0 - disp))
-        utilities.append(mean_s)
-
         if obs.done: break
 
+    # SAME normalized metric as baseline - compute ONCE at episode end
+    services = [z.service for z in env.state.zones]
+    mean_s = sum(services) / len(services)
+    disp = sum(abs(s - mean_s) for s in services) / len(services)
+    fairness = max(0.0, 1.0 - disp)
+    utility = mean_s
+    safety = max(0.0, 1.0 - obs.info.get("violations", 0) / 10.0)
+    normalized_reward = max(0.0, min(1.0, 0.4 * utility + 0.4 * fairness + 0.2 * safety))
+
     return {
-        "reward": total_reward,
-        "fairness": fairness_scores[-1],
-        "utility": sum(utilities) / len(utilities)
+        "reward": normalized_reward,
+        "fairness": fairness,
+        "utility": utility
     }
 ''')
 
