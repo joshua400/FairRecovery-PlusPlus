@@ -1,0 +1,16 @@
+# FairRecovery — pinned dependencies
+# Pin everything for deterministic Docker builds on HF Spaces
+
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+pydantic==2.9.2
+structlog==24.4.0
+requests==2.32.3
+numpy==1.26.4
+
+# OpenEnv core — install from PyPI (latest stable)
+openenv-core>=0.1.0
+
+# Optional: for local development only
+# pytest==8.3.2
+# httpx==0.27.2

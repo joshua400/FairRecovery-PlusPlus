@@ -1,32 +1,50 @@
-spec_version: 1
+# OpenEnv Environment Manifest
+# This file is read by `openenv push` — schema must match OpenEnv CLI exactly.
+# HF Spaces fields (build/resources/sdk) go in README.md YAML front-matter, NOT here.
+
 name: fairrecovery
-version: 2.0.0
-type: space
-runtime: fastapi
-app: server.app:app
-port: 8000
+version: "1.0.0"
 description: >
-  An adaptive multi-agent OpenEnv environment where an AI planner coordinates
-  post-disaster recovery while interacting with dynamic agents (citizens, NGOs,
-  adversaries). Learns to optimise fairness and efficiency while adapting to
-  evolving behavioral patterns. Designed for RLVR training via TRL/GRPO.
+  Post-disaster city recovery RL environment. An LLM agent allocates limited 
+  resources (power, water, medical) across disaster zones, optimising both 
+  efficiency and fairness for vulnerable populations over a 5-day episode. 
+  Features a fairness trap: naive utility-maximising agents ignore the highest-need 
+  zones. Trained agents learn to balance recovery equity vs speed.
+entry_point: server.app:app
+
+themes:
+  primary: "3.1 - Real-World Professional Tasks"
+  secondary: "2 - Long-Horizon Planning"
+
 tags:
-  - openenv
-  - reinforcement-learning
-  - multi-agent
   - fairness
   - disaster-recovery
-  - world-modeling
+  - humanitarian-ai
+  - rlvr
+  - multi-objective
   - long-horizon
-  - pytorch
-  - meta
-tasks:
-  - id: easy_3zone
-    difficulty: easy
-    description: 3-zone post-flood scenario with one high-vulnerability zone.
-  - id: medium_5zone
-    difficulty: medium
-    description: 5-zone earthquake with constrained budget and triage.
-  - id: hard_5zone_fairness_trap
-    difficulty: hard
-    description: 5-zone hurricane with fairness trap, adversarial agents, and multi-agent dynamics.
+
+server:
+  host: "0.0.0.0"
+  port: 7860            # HF Spaces uses 7860
+
+action_space:
+  type: structured
+  description: "Multi-step protocol: analyze → allocate → execute → submit"
+
+observation_space:
+  type: structured
+  description: "Zone state (damage, service, vulnerability) + budget + day"
+
+reward:
+  type: dense
+  components:
+    - name: R_exec
+      weight: 1.0
+      description: "Average service improvement from allocations"
+    - name: R_fair
+      weight: 0.7
+      description: "Negative disparity between vulnerable vs non-vulnerable zones"
+    - name: R_safe
+      weight: 0.3
+      description: "Constraint satisfaction (no invalid actions or budget overflows)"
