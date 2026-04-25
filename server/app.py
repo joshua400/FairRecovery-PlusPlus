@@ -175,16 +175,17 @@ def _build_app():
 
     # ── Custom Simplified Gradio UI ──────────────────────────────────────────
     with gr.Blocks(title="FairRecovery++ Simulator", theme=gr.themes.Soft()) as gradio_app:
-        gr.Markdown("# 🏗️ FairRecovery++: Ethical Disaster Management AI")
-        gr.Markdown("This environment trains AI to make fair, real-world recovery decisions where helping one group too much can harm another.")
+        gr.Markdown("# 🏗️ FairRecovery++: Adaptive Multi-Agent Disaster Recovery Environment")
+        gr.Markdown("> **An OpenEnv environment that teaches LLMs to make fair resource allocation decisions under adversarial pressure, multi-agent dynamics, and long-horizon planning constraints.**")
         
         with gr.Row():
             with gr.Column(scale=1):
-                gr.Markdown("### 🚨 Event Details")
-                gr.Markdown("""**Disaster Code: RED**
-- **Impact**: 5 city zones heavily damaged.
-- **Demographics**: Mix of high-income and highly vulnerable populations.
-- **Goal**: Allocate limited resources (Medical, Water, Power) fairly over time.
+                gr.Markdown("### 🚨 The Fairness Trap (Hard Scenario)")
+                gr.Markdown("""
+After a disaster, AI systems optimizing for **efficiency alone** consistently neglect vulnerable populations. 
+A greedy planner fixes wealthy **Zone 0** (low damage, easy win) while **Zone 4** (96% vulnerable, 92% damaged) gets nothing. This is the **Fairness Trap** -- and current LLMs fall right into it.
+
+**FairRecovery++** teaches the LLM to escape this trap by balancing efficiency vs fairness under tight budgets.
 """)
                 
                 policy_dropdown = gr.Dropdown(
