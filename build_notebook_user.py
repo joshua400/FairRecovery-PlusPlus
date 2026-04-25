@@ -368,6 +368,8 @@ print("Multi-objective RL with fairness, safety, and utility optimization")
 b_r = df['baseline_reward'].mean()
 t_r = df['trained_reward'].mean()
 b_f = df['baseline_fairness'].mean()
+t_f = df['trained_fairness'].mean()
+
 improvement_r = t_r - b_r
 improvement_f = t_f - b_f
 percent_r = (improvement_r / (abs(b_r) + 1e-5)) * 100
