@@ -83,6 +83,7 @@ class FairRecoveryEnvironment(Environment):
             typed_action = FairRecoveryAction(action_type=ActionType.NOOP, reasoning=str(e))
 
         self._state.step_count += 1
+        self._action_history.append(typed_action.action_type.value)
         
         # 1. Update Day Counter
         # Sequence: Analyze -> Allocate -> Execute -> Day++

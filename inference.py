@@ -1,55 +1,57 @@
 """
 FairRecovery++ — Baseline Inference Script.
 
-Updated to match the refactored project structure.
+Updated with Phase-Aware policies to correctly advance days.
 """
 
 from __future__ import annotations
-import argparse
-import json
 import random
-import numpy as np
-from typing import Dict, List
-
 from fairrecovery_env.models import ResourceAllocation, FairRecoveryAction, FairRecoveryObservation
-from fairrecovery_env.constants import ActionType, ResourceType, COST_MEDICAL, COST_WATER, COST_POWER
+from fairrecovery_env.constants import ActionType, ResourceType
 
-# Local dummy client for testing if server is not running
-class LocalInference:
-    def __init__(self, base_url: str):
-        self.base_url = base_url
-
-def random_policy(obs: FairRecoveryObservation) -> FairRecoveryAction:
-    """Completely random policy."""
-    return FairRecoveryAction(
-        action_type=random.choice([ActionType.ANALYZE, ActionType.ALLOCATE, ActionType.EXECUTE]),
-        reasoning="Random strategy."
-    )
+def _get_phase_action(obs: FairRecoveryObservation) -> ActionType:
+    """Determine the correct action type based on the 3-phase cycle."""
+    num_steps = len(obs.action_history)
+    cycle_pos = num_steps % 3
+    if cycle_pos == 0: return ActionType.ANALYZE
+    if cycle_pos == 1: return ActionType.ALLOCATE
+    return ActionType.EXECUTE
 
 def greedy_policy(obs: FairRecoveryObservation) -> FairRecoveryAction:
-    """Utility-maximising greedy — ignores vulnerability (WRONG policy)."""
+    """Greedy: Target zone 0 (easiest/wealthiest) regardless of vulnerability."""
     if obs.day > 10: return FairRecoveryAction(action_type=ActionType.SUBMIT)
     
-    # Simple heuristic for this example
-    return FairRecoveryAction(
-        action_type=ActionType.ALLOCATE,
-        allocations=[
-            ResourceAllocation(zone=0, resource=ResourceType.MEDICAL)
-        ],
-        reasoning="Greedy: targeting zone 0 first."
-    )
+    action_type = _get_phase_action(obs)
+    
+    if action_type == ActionType.ANALYZE:
+        return FairRecoveryAction(action_type=action_type, critical_zones=[0], reasoning="Greedy focus on Zone 0.")
+    
+    if action_type == ActionType.ALLOCATE:
+        return FairRecoveryAction(
+            action_type=action_type,
+            allocations=[ResourceAllocation(zone=0, resource=ResourceType.MEDICAL)],
+            reasoning="Maximizing utility in Zone 0."
+        )
+    
+    return FairRecoveryAction(action_type=ActionType.EXECUTE)
 
 def fairness_aware_policy(obs: FairRecoveryObservation) -> FairRecoveryAction:
-    """Fairness-aware heuristic (CORRECT policy)."""
+    """Fairness-Aware: Prioritizes Zone 4 (highest vulnerability)."""
     if obs.day > 10: return FairRecoveryAction(action_type=ActionType.SUBMIT)
     
-    # Prioritize the most vulnerable zone
-    vulnerable_zone = sorted(range(len(obs.zones)), key=lambda i: obs.zones[i].vulnerable_ratio, reverse=True)[0]
+    action_type = _get_phase_action(obs)
     
-    return FairRecoveryAction(
-        action_type=ActionType.ALLOCATE,
-        allocations=[
-            ResourceAllocation(zone=vulnerable_zone, resource=ResourceType.MEDICAL)
-        ],
-        reasoning=f"Fair: prioritizing zone {vulnerable_zone} due to vulnerability."
-    )
+    # Identify most vulnerable zone (usually Zone 4 in hard scenario)
+    v_zone = sorted(range(len(obs.zones)), key=lambda i: obs.zones[i].vulnerable_ratio, reverse=True)[0]
+    
+    if action_type == ActionType.ANALYZE:
+        return FairRecoveryAction(action_type=action_type, critical_zones=[v_zone], reasoning=f"Prioritizing high-vulnerability Zone {v_zone}.")
+    
+    if action_type == ActionType.ALLOCATE:
+        return FairRecoveryAction(
+            action_type=action_type,
+            allocations=[ResourceAllocation(zone=v_zone, resource=ResourceType.MEDICAL)],
+            reasoning=f"Protecting vulnerable population in Zone {v_zone}."
+        )
+    
+    return FairRecoveryAction(action_type=ActionType.EXECUTE)
