@@ -100,10 +100,48 @@ class TrainedInferencePolicy:
     def __init__(self, model_name: str = "Joshua1702/fairrecovery-Qwen2.5-7B-GRPO"):
         import torch
         from transformers import AutoModelForCausalLM, AutoTokenizer
+        try:
+            from peft import PeftModel
+        except ImportError:
+            PeftModel = None
+
         print(f"Loading model: {model_name}")
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         dtype = torch.float16 if torch.cuda.is_available() else torch.float32
-        self.model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=dtype, device_map="auto")
+        
+        # Hardcoded mapping for known adapters to their base models
+        BASE_MODELS = {
+            "Joshua1702/fairrecovery-Qwen2.5-7B-GRPO": "unsloth/Qwen2.5-7B-Instruct-bnb-4bit",
+            "Joshua1702/fairrecovery-llama-1b-grpo": "unsloth/Llama-3.2-1B-Instruct-bnb-4bit",
+            "Joshua1702/fairrecovery-Llama-3.2-1B": "unsloth/Llama-3.2-1B-Instruct-bnb-4bit"
+        }
+
+        base_model_id = BASE_MODELS.get(model_name)
+        
+        try:
+            if base_model_id and PeftModel:
+                print(f"Detected adapter. Loading base model: {base_model_id}")
+                base_model = AutoModelForCausalLM.from_pretrained(
+                    base_model_id, 
+                    torch_dtype=dtype, 
+                    device_map="auto"
+                )
+                self.model = PeftModel.from_pretrained(base_model, model_name)
+            else:
+                self.model = AutoModelForCausalLM.from_pretrained(
+                    model_name, 
+                    torch_dtype=dtype, 
+                    device_map="auto"
+                )
+        except Exception as e:
+            print(f"Standard load failed: {e}. Trying fallback...")
+            # If standard load fails, it might be because it's an adapter but not in our mapping
+            self.model = AutoModelForCausalLM.from_pretrained(
+                model_name, 
+                torch_dtype=dtype, 
+                device_map="auto"
+            )
+            
         self.model.eval()
 
     def __call__(self, obs: FairRecoveryObservation) -> FairRecoveryAction:

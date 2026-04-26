@@ -13,6 +13,8 @@ huggingface_hub
 transformers
 torch
 accelerate
+peft
+bitsandbytes
 sentencepiece
 pandas
 matplotlib
