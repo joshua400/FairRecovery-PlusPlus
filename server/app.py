@@ -19,9 +19,20 @@ from inference import greedy_policy, fairness_aware_policy, HFInferencePolicy, T
 
 def _build_app():
     import gradio as gr
+    from fastapi.staticfiles import StaticFiles
+    
     app = FastAPI(title="FairRecovery++ RL Environment", version="2.0.0")
+    
+    # Static files for assets
+    assets_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "assets")
+    if os.path.exists(assets_path):
+        app.mount("/assets", StaticFiles(directory=assets_path), name="assets")
+
     _env = FairRecoveryEnvironment()
     _logger = TrainingLogger()
+
+    @app.get("/health")
+    async def health(): return {"status": "healthy"}
 
     @app.post("/reset")
     async def reset(difficulty: str = "medium", episode_id: Optional[str] = None):
@@ -34,14 +45,12 @@ def _build_app():
         return _env.step(action).model_dump()
 
     def run_simulation(policy_type: str, hf_token: str = ""):
-        # Note: Added default value to hf_token to prevent "missing input" error
         env = FairRecoveryEnvironment()
         obs = env.reset(task_id="multi_disaster_hard")
         
         logs = []
         logs.append(f"### 🚀 SESSION: {policy_type.upper()}")
         
-        # Policy Selection
         if policy_type == "Live LLM (Llama-3)":
             if not hf_token or hf_token.strip() == "":
                 return "### ❌ Error\nPlease provide a Hugging Face Token in the sidebar to use the Live LLM.", ""
@@ -84,14 +93,18 @@ def _build_app():
                 results = gr.Markdown("### Results will appear here...")
                 logs = gr.Markdown("### Simulation Logs")
 
-        # Explicitly wire the inputs
         btn.click(fn=run_simulation, inputs=[policy, token_input], outputs=[logs, results])
 
         with gr.Tab("README"):
             readme_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "README.md")
             if os.path.exists(readme_path):
                 with open(readme_path, "r", encoding="utf-8") as f:
-                    gr.Markdown(f.read())
+                    content = f.read()
+                    # Remove YAML header
+                    content = re.sub(r'^---.*?---', '', content, flags=re.DOTALL)
+                    # Fix image paths for Gradio display (assets/ -> /assets/)
+                    content = content.replace("assets/", "/assets/")
+                    gr.Markdown(content)
 
     @app.get("/")
     async def root(): return RedirectResponse(url="/ui/")
