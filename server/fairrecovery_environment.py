@@ -90,16 +90,7 @@ class FairRecoveryEnvironment(Environment):
         reward = 0.0
         feedback = ""
 
-        # 1. Processing Phases
         if typed_action.action_type == ActionType.EXECUTE:
-            # FIX: CAPTURE allocated zones BEFORE execution potentially changes state
-            # In our current structure, we don't have a 'pending' list, but we have the current action.
-            # However, if 'allocate' was a separate step, we need to know what was allocated.
-            # For simplicity, we check the action's own allocations if it was a combo,
-            # or we look at service increases in the zones.
-            
-            # Let's assume the user wants the RewardEngine to see what was JUST allocated.
-            # We'll extract zone IDs from the most recent 'allocate' action if available.
             allocated_ids = frozenset()
             if typed_action.allocations:
                 allocated_ids = frozenset(a.zone for a in typed_action.allocations)
@@ -114,17 +105,15 @@ class FairRecoveryEnvironment(Environment):
             reward = components.R_total
             feedback = components.feedback
             self._state.day += 1
-            self._pending_violations = [] # Clear after execution reward processed
+            self._pending_violations = []
             
         else:
             if typed_action.action_type == ActionType.ALLOCATE:
                 self._allocate_phase(typed_action)
-            
             reward, feedback = self._reward_engine.compute_reward(typed_action, self._state)
 
         self._state.cumulative_reward = self._reward_engine.cumulative_reward
 
-        # 2. Check Termination
         is_done = (
             typed_action.action_type == ActionType.SUBMIT or
             self._state.day > MAX_DAYS or
@@ -132,10 +121,8 @@ class FairRecoveryEnvironment(Environment):
         )
         self._state.is_done = is_done
 
-        # 3. Build Observation
         obs = self._build_observation(feedback)
         
-        # FIX: Rubric score flow to obs.reward
         rubric_score = self._rubrics.forward(typed_action, obs)
         if rubric_score != 0.0:
             self._state.cumulative_reward += rubric_score
@@ -161,7 +148,7 @@ class FairRecoveryEnvironment(Environment):
                     self._state.budget_remaining -= cost
                     zone = self._state.zones[zone_id]
                     zone.damage = max(0.0, zone.damage - 0.05)
-                    zone.service_level = min(1.0, zone.service_level + 0.1)
+                    zone.service = min(1.0, zone.service + 0.1) # FIX: service_level -> service
                 else:
                     self._state.violations_total += 1
                     self._pending_violations.append(f"invalid_allocation:{zone_id}")
@@ -170,12 +157,12 @@ class FairRecoveryEnvironment(Environment):
 
     def _execute_phase(self, action: FairRecoveryAction):
         for zone in self._state.zones:
-            if zone.service_level < 0.2:
+            if zone.service < 0.2: # FIX: service_level -> service
                 zone.damage = min(1.0, zone.damage + 0.02)
-            zone.service_level = max(0.0, zone.service_level - 0.05)
+            zone.service = max(0.0, zone.service - 0.05) # FIX: service_level -> service
 
     def _build_observation(self, feedback: str) -> FairRecoveryObservation:
-        services = [z.service_level for z in self._state.zones]
+        services = [z.service for z in self._state.zones] # FIX: service_level -> service
         avg_svc = sum(services) / len(services)
         mad = sum(abs(s - avg_svc) for s in services) / len(services)
         equity = 1.0 - mad
@@ -198,6 +185,5 @@ class FairRecoveryEnvironment(Environment):
             metadata={"grader_score": grader_score}
         )
 
-    # FIX: state as method, not property
     def state(self) -> FairRecoveryState:
         return self._state
