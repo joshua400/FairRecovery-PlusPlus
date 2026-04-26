@@ -1,5 +1,4 @@
-# FairRecovery — ultra-loosen dependencies to resolve conflicts
-# Remove strict pins to let pip resolve the best compatible tree
+# FairRecovery — requirements for full ML pipeline (Train -> Deploy -> Demo)
 
 fastapi>=0.115.2
 uvicorn[standard]>=0.32.0
@@ -8,10 +7,13 @@ structlog>=24.4.0
 requests>=2.32.3
 numpy>=1.26.4
 websocket-client>=1.6.0
-
-# OpenEnv core
 openenv-core[core]>=0.2.3
-
-# UI dependencies
 gradio
 huggingface_hub
+transformers
+torch
+accelerate
+sentencepiece
+pandas
+matplotlib
+seaborn

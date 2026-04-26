@@ -95,6 +95,38 @@ def greedy_policy(obs: FairRecoveryObservation) -> FairRecoveryAction:
     if a_type == ActionType.ALLOCATE: return FairRecoveryAction(action_type=a_type, allocations=[ResourceAllocation(zone=0, resource=ResourceType.MEDICAL)])
     return FairRecoveryAction(action_type=ActionType.EXECUTE)
 
+class TrainedInferencePolicy:
+    """Local inference for the GRPO-trained model."""
+    def __init__(self, model_name: str = "Joshua1702/fairrecovery-llama-1b-grpo"):
+        import torch
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        self.model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.float16, device_map="auto")
+
+    def __call__(self, obs: FairRecoveryObservation) -> FairRecoveryAction:
+        if obs.day > 10: return FairRecoveryAction(action_type=ActionType.SUBMIT)
+        
+        # Simple template matching the training data
+        prompt = f"Environment State: {obs.model_dump_json()}\nAction:"
+        inputs = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
+        
+        with torch.no_grad():
+            outputs = self.model.generate(**inputs, max_new_tokens=100)
+        
+        response = self.tokenizer.decode(outputs[0][inputs["input_ids"].shape[-1]:], skip_special_tokens=True)
+        return self._parse_trained_response(response, obs)
+
+    def _parse_trained_response(self, content: str, obs: FairRecoveryObservation) -> FairRecoveryAction:
+        # Implementation of parsing logic (similar to HFInferencePolicy but tailored to trained format)
+        try:
+            import re
+            match = re.search(r"\{.*\}", content, re.DOTALL)
+            data = json.loads(match.group(0)) if match else json.loads(content)
+            return FairRecoveryAction(**data)
+        except:
+            # Fallback to a safe execute if parsing fails
+            return FairRecoveryAction(action_type=ActionType.EXECUTE, reasoning="Trained model fallback.")
+
 def fairness_aware_policy(obs: FairRecoveryObservation) -> FairRecoveryAction:
     if obs.day > 10: return FairRecoveryAction(action_type=ActionType.SUBMIT)
     a_type = _get_phase_action(obs)

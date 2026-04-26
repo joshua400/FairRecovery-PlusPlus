@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from fairrecovery_env.models import FairRecoveryAction
 from server.fairrecovery_environment import FairRecoveryEnvironment
-from inference import greedy_policy, fairness_aware_policy, HFInferencePolicy, TrainingLogger
+from inference import greedy_policy, fairness_aware_policy, HFInferencePolicy, TrainingLogger, TrainedInferencePolicy
 
 def _build_app():
     import gradio as gr
@@ -30,6 +30,7 @@ def _build_app():
 
     _env = FairRecoveryEnvironment()
     _logger = TrainingLogger()
+    _trained_policy = None # Lazy load
 
     @app.get("/health")
     async def health(): return {"status": "healthy"}
@@ -45,16 +46,23 @@ def _build_app():
         return _env.step(action).model_dump()
 
     def run_simulation(policy_type: str, hf_token: str = ""):
+        nonlocal _trained_policy
         env = FairRecoveryEnvironment()
         obs = env.reset(task_id="multi_disaster_hard")
         
         logs = []
         logs.append(f"### 🚀 SESSION: {policy_type.upper()}")
         
+        # Policy Selection
         if policy_type == "Live LLM (Llama-3)":
             if not hf_token or hf_token.strip() == "":
                 return "### ❌ Error\nPlease provide a Hugging Face Token in the sidebar to use the Live LLM.", ""
             policy_fn = HFInferencePolicy(token=hf_token)
+        elif policy_type == "Trained Model (Llama-1B-GRPO)":
+            if _trained_policy is None:
+                logs.append("⏳ *Loading trained model into GPU...*")
+                _trained_policy = TrainedInferencePolicy()
+            policy_fn = _trained_policy
         elif policy_type == "Baseline (Greedy)":
             policy_fn = greedy_policy
         else:
@@ -82,7 +90,7 @@ def _build_app():
         with gr.Row():
             with gr.Column(scale=1):
                 policy = gr.Dropdown(
-                    choices=["Baseline (Greedy)", "Fairness Aware (Heuristic)", "Live LLM (Llama-3)"], 
+                    choices=["Baseline (Greedy)", "Fairness Aware (Heuristic)", "Live LLM (Llama-3)", "Trained Model (Llama-1B-GRPO)"], 
                     value="Baseline (Greedy)",
                     label="Agent Strategy"
                 )
@@ -95,14 +103,21 @@ def _build_app():
 
         btn.click(fn=run_simulation, inputs=[policy, token_input], outputs=[logs, results])
 
+        with gr.Tab("Analysis & Fairness"):
+            gr.Markdown("## 📊 Training Results & Fairness Trends")
+            with gr.Row():
+                gr.Image("/assets/training_results.png", label="Trained vs Baseline")
+                gr.Image("/assets/score_heatmap.png", label="Episode Rewards")
+            with gr.Row():
+                gr.Image("/assets/training_loss.png", label="Reward Convergence")
+                gr.Image("/assets/fairness_vs_episode.png", label="Fairness Improvement")
+
         with gr.Tab("README"):
             readme_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "README.md")
             if os.path.exists(readme_path):
                 with open(readme_path, "r", encoding="utf-8") as f:
                     content = f.read()
-                    # Remove YAML header
                     content = re.sub(r'^---.*?---', '', content, flags=re.DOTALL)
-                    # Fix image paths for Gradio display (assets/ -> /assets/)
                     content = content.replace("assets/", "/assets/")
                     gr.Markdown(content)
 

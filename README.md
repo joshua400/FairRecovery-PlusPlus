@@ -226,6 +226,14 @@ inference.py              # Baseline policies (greedy, fairness-aware, random, H
 train_COMPLETE.ipynb      # GRPO training notebook (TRL + Unsloth)
 generate_summary_plots.py # Reproduce all plots from episode_log.csv
 docs/                     # Final project documentation and blog post
+
+---
+
+## 🤗 Model
+The underlying agent for this environment was trained using GRPO (TRL + Unsloth) on a Llama-3.2-1B base.
+- **Model Repo:** [Joshua1702/fairrecovery-llama-1b-grpo](https://huggingface.co/Joshua1702/fairrecovery-llama-1b-grpo)
+- **Training Method:** Group Relative Policy Optimization (GRPO)
+- **Objective:** Balanced Utility and Fairness in post-disaster scenarios.
 ```
 
 ---
