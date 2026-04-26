@@ -56,8 +56,6 @@ We train agents using **Fair-GRPO-RLVR**, a multi-objective RL framework with:
 - Curriculum learning (easy → hard)
 - Anti-reward-hacking safety constraints
 
-👉 This directly targets: **Innovation (40%)**
-
 ---
 
 ## ⚖ Fairness Metric
@@ -75,8 +73,6 @@ This makes fairness:
 - ✔ measurable
 - ✔ interpretable
 - ✔ hard to game
-
-👉 This boosts: **Reward design score & Technical clarity**
 
 ---
 
@@ -103,8 +99,6 @@ Our trained **Qwen-7B** and **Llama-3.2-1B** agents learn to prioritize Zone 4 �
 - Identifies critical zones (high damage + vulnerability)
 - Allocates resources more equitably
 - Improves both fairness and overall recovery
-
-👉 This is what judges remember (**Storytelling 30%**)
 
 ---
 
