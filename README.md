@@ -158,33 +158,40 @@ LLM Agent (GRPO trained)
 In this section, we highlight the most critical performance metrics and fairness improvements achieved during training. These plots provide empirical proof of the agent's ability to navigate the fairness-utility trade-off.
 
 ### 🏆 The Winning Metric: Dual-Model Comparison
-![Model Comparison](evidence/plots/model_comparison.png)
+
+![Model Comparison](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus/resolve/main/evidence/plots/model_comparison.png)
 *Figure 1: Comparison between Baseline, Llama-1B, and Qwen-7B. Our Premium Qwen-7B agent reaches a near-perfect **0.912 Equity Index**.*
 
 ### 📈 Training & Strategy Results
 
-<table align="center">
-  <tr>
-    <td align="center"><b>Baseline vs Trained (Qwen)</b><br><img src="evidence/plots/training_results.png" width="400"><br><i>Fig 2: 57% reward improvement.</i></td>
-    <td align="center"><b>Reward Heatmap</b><br><img src="evidence/plots/score_heatmap.png" width="400"><br><i>Fig 3: Consistency across episodes.</i></td>
-  </tr>
-  <tr>
-    <td align="center"><b>Curriculum Learning Curve</b><br><img src="evidence/plots/training_loss.png" width="400"><br><i>Fig 4: Steady convergence.</i></td>
-    <td align="center"><b>Fairness-Utility Frontier</b><br><img src="evidence/plots/utility_vs_fairness.png" width="400"><br><i>Fig 5: Escaping the greed trap.</i></td>
-  </tr>
-</table>
+**Baseline vs Trained (Qwen)**
+![Training Results](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus/resolve/main/evidence/plots/training_results.png)
+*Figure 2: 57% reward improvement.*
+
+**Reward Heatmap**
+![Score Heatmap](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus/resolve/main/evidence/plots/score_heatmap.png)
+*Figure 3: Consistency across episodes.*
+
+**Curriculum Learning Curve**
+![Training Loss](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus/resolve/main/evidence/plots/training_loss.png)
+*Figure 4: Steady convergence.*
+
+**Fairness-Utility Frontier**
+![Utility vs Fairness](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus/resolve/main/evidence/plots/utility_vs_fairness.png)
+*Figure 5: Escaping the greed trap.*
 
 ### ⏱️ Execution Dynamics (Step-by-Step)
-![Fairness Improvement](evidence/plots/fairness_vs_episode.png)
+
+![Fairness Improvement](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus/resolve/main/evidence/plots/fairness_vs_episode.png)
 *Figure 6: Global Fairness achievement trend over 32 training cycles.*
 
-![Component Rewards](evidence/plots/component_rewards.png)
+![Component Rewards](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus/resolve/main/evidence/plots/component_rewards.png)
 *Figure 7: Decomposed reward components showing the sacrifice of immediate utility for long-term equity.*
 
-![Reward vs Steps](evidence/plots/reward_vs_steps.png)
+![Reward vs Steps](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus/resolve/main/evidence/plots/reward_vs_steps.png)
 *Figure 8: Performance stability during the 10-day recovery window.*
 
-![Fairness vs Steps](evidence/plots/fairness_vs_steps.png)
+![Fairness vs Steps](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus/resolve/main/evidence/plots/fairness_vs_steps.png)
 *Figure 9: Cumulative equity growth per action.*
 
 ---

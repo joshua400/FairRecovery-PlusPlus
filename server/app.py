@@ -122,26 +122,25 @@ def _build_app():
         with gr.Tab("Analysis & Fairness"):
             gr.Markdown("## 📊 Training Results & Fairness Trends")
             
-            # Use absolute filesystem paths for gr.Image
-            base_dir = os.path.dirname(os.path.dirname(__file__))
-            asset_plots = os.path.join(base_dir, "evidence", "plots")
-            results_img = os.path.join(asset_plots, "training_results.png")
-            heatmap_img = os.path.join(asset_plots, "score_heatmap.png")
-            loss_img = os.path.join(asset_plots, "training_loss.png")
-            fair_img = os.path.join(asset_plots, "fairness_vs_episode.png")
-            comp_img = os.path.join(asset_plots, "component_rewards.png")
-            model_comp_img = os.path.join(asset_plots, "model_comparison.png")
+            # Use absolute HF URLs to bypass any local filesystem/Docker mount issues
+            base_url = "https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus/resolve/main/evidence/plots/"
+            results_img = base_url + "training_results.png"
+            heatmap_img = base_url + "score_heatmap.png"
+            loss_img = base_url + "training_loss.png"
+            fair_img = base_url + "fairness_vs_episode.png"
+            comp_img = base_url + "component_rewards.png"
+            model_comp_img = base_url + "model_comparison.png"
 
             with gr.Row():
-                gr.Image(model_comp_img if os.path.exists(model_comp_img) else None, label="Model Comparison (Llama vs Qwen)")
+                gr.Image(model_comp_img, label="Model Comparison (Llama vs Qwen)")
             with gr.Row():
-                gr.Image(results_img if os.path.exists(results_img) else None, label="Trained vs Baseline")
-                gr.Image(heatmap_img if os.path.exists(heatmap_img) else None, label="Episode Rewards")
+                gr.Image(results_img, label="Trained vs Baseline")
+                gr.Image(heatmap_img, label="Episode Rewards")
             with gr.Row():
-                gr.Image(loss_img if os.path.exists(loss_img) else None, label="Reward Convergence")
-                gr.Image(fair_img if os.path.exists(fair_img) else None, label="Fairness Improvement")
+                gr.Image(loss_img, label="Reward Convergence")
+                gr.Image(fair_img, label="Fairness Improvement")
             with gr.Row():
-                gr.Image(comp_img if os.path.exists(comp_img) else None, label="Component Breakdown (Utility vs Fairness)")
+                gr.Image(comp_img, label="Component Breakdown (Utility vs Fairness)")
 
         with gr.Tab("README"):
             readme_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "README.md")
