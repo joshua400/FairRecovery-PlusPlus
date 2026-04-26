@@ -1,17 +1,17 @@
-# FairRecovery — pinned dependencies
-# Pin everything for deterministic Docker builds on HF Spaces
+# FairRecovery — loosened dependencies to resolve conflicts
+# Let pip find the best compatible versions across OpenEnv, Gradio and FastAPI
 
-fastapi==0.115.0
-uvicorn[standard]==0.32.0
-pydantic==2.9.2
-structlog==24.4.0
-requests==2.32.3
-numpy==1.26.4
+fastapi>=0.115.2
+uvicorn[standard]>=0.32.0
+pydantic>=2.9.2
+structlog>=24.4.0
+requests>=2.32.3
+numpy>=1.26.4
 websocket-client>=1.6.0
 
-# OpenEnv core — MUST match reference version for import compatibility
+# OpenEnv core
 openenv-core[core]>=0.2.3
 
 # UI dependencies
-gradio>=4.0.0
+gradio>=5.0.0
 huggingface_hub<0.27.0
