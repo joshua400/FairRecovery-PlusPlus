@@ -269,21 +269,23 @@ We trained using GRPO with Unsloth acceleration.
 ![Utility vs Fairness](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus/resolve/main/evidence/plots/utility_vs_fairness.png)
 **Extended Training Metrics**
 ![Extra Metrics](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus/resolve/main/evidence/plots/training_metrics_extra.png)
-*Figure 5: Detailed convergence and stability metrics.*
+**Advanced Stability Analysis**
+![Extra Metrics 2](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus/resolve/main/evidence/plots/training_metrics_extra_2.png)
+*Figure 6: Advanced stability and variance analysis across multi-seed runs.*
 
 ### ⏱️ Execution Dynamics (Step-by-Step)
 
 ![Fairness Improvement](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus/resolve/main/evidence/plots/fairness_vs_episode.png)
-*Figure 6: Global Fairness achievement trend over 32 training cycles.*
+*Figure 7: Global Fairness achievement trend over 32 training cycles.*
 
 ![Component Rewards](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus/resolve/main/evidence/plots/component_rewards.png)
-*Figure 7: Decomposed reward components showing the sacrifice of immediate utility for long-term equity.*
+*Figure 8: Decomposed reward components showing the sacrifice of immediate utility for long-term equity.*
 
 ![Reward vs Steps](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus/resolve/main/evidence/plots/reward_vs_steps.png)
-*Figure 8: Performance stability during the 10-day recovery window.*
+*Figure 9: Performance stability during the 10-day recovery window.*
 
 ![Fairness vs Steps](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus/resolve/main/evidence/plots/fairness_vs_steps.png)
-*Figure 9: Cumulative equity growth per action.*
+*Figure 10: Cumulative equity growth per action.*
 
 ---
 
