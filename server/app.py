@@ -30,7 +30,8 @@ def _build_app():
 
     _env = FairRecoveryEnvironment()
     _logger = TrainingLogger()
-    _trained_policy = None # Lazy load
+    _trained_llama = None
+    _trained_qwen = None
 
     @app.get("/health")
     async def health(): return {"status": "healthy"}
@@ -46,7 +47,7 @@ def _build_app():
         return _env.step(action).model_dump()
 
     def run_simulation(policy_type: str, hf_token: str = ""):
-        nonlocal _trained_policy
+        nonlocal _trained_llama, _trained_qwen
         env = FairRecoveryEnvironment()
         obs = env.reset(task_id="multi_disaster_hard")
         
@@ -58,11 +59,16 @@ def _build_app():
             if not hf_token or hf_token.strip() == "":
                 return "### ❌ Error\nPlease provide a Hugging Face Token in the sidebar to use the Live LLM.", ""
             policy_fn = HFInferencePolicy(token=hf_token)
-        elif policy_type == "Trained Model (Llama-1B-GRPO)":
-            if _trained_policy is None:
-                logs.append("⏳ *Loading trained model into GPU...*")
-                _trained_policy = TrainedInferencePolicy()
-            policy_fn = _trained_policy
+        elif "Qwen" in policy_type:
+            if _trained_qwen is None:
+                logs.append("⏳ *Loading Trained Qwen-7B model into GPU...*")
+                _trained_qwen = TrainedInferencePolicy(model_name="Joshua1702/fairrecovery-Qwen2.5-7B-GRPO")
+            policy_fn = _trained_qwen
+        elif "Llama-1B-GRPO" in policy_type:
+            if _trained_llama is None:
+                logs.append("⏳ *Loading Trained Llama-1B model into GPU...*")
+                _trained_llama = TrainedInferencePolicy(model_name="Joshua1702/fairrecovery-llama-1b-grpo")
+            policy_fn = _trained_llama
         elif policy_type == "Baseline (Greedy)":
             policy_fn = greedy_policy
         else:
@@ -90,8 +96,14 @@ def _build_app():
         with gr.Row():
             with gr.Column(scale=1):
                 policy = gr.Dropdown(
-                    choices=["Baseline (Greedy)", "Fairness Aware (Heuristic)", "Live LLM (Llama-3)", "Trained Model (Llama-1B-GRPO)"], 
-                    value="Baseline (Greedy)",
+                    choices=[
+                        "Baseline (Greedy)", 
+                        "Fairness Aware (Heuristic)", 
+                        "Live LLM (Llama-3)", 
+                        "Trained Model (Llama-1B-GRPO)", 
+                        "Trained Model (Qwen-2.5-7B-GRPO)"
+                    ], 
+                    value="Trained Model (Qwen-2.5-7B-GRPO)",
                     label="Agent Strategy"
                 )
                 token_input = gr.Textbox(label="Hugging Face Token", placeholder="Enter token for Live LLM...", type="password")
@@ -108,12 +120,16 @@ def _build_app():
             
             # Use absolute filesystem paths for gr.Image
             base_dir = os.path.dirname(os.path.dirname(__file__))
-            results_img = os.path.join(base_dir, "assets", "training_results.png")
-            heatmap_img = os.path.join(base_dir, "assets", "score_heatmap.png")
-            loss_img = os.path.join(base_dir, "assets", "training_loss.png")
-            fair_img = os.path.join(base_dir, "assets", "fairness_vs_episode.png")
-            comp_img = os.path.join(base_dir, "assets", "component_rewards.png")
+            asset_plots = os.path.join(base_dir, "asset_final", "plots")
+            results_img = os.path.join(asset_plots, "training_results.png")
+            heatmap_img = os.path.join(asset_plots, "score_heatmap.png")
+            loss_img = os.path.join(asset_plots, "training_loss.png")
+            fair_img = os.path.join(asset_plots, "fairness_vs_episode.png")
+            comp_img = os.path.join(asset_plots, "component_rewards.png")
+            model_comp_img = os.path.join(asset_plots, "model_comparison.png")
 
+            with gr.Row():
+                gr.Image(model_comp_img if os.path.exists(model_comp_img) else None, label="Model Comparison (Llama vs Qwen)")
             with gr.Row():
                 gr.Image(results_img if os.path.exists(results_img) else None, label="Trained vs Baseline")
                 gr.Image(heatmap_img if os.path.exists(heatmap_img) else None, label="Episode Rewards")

@@ -9,11 +9,11 @@ pinned: false
 
 # 🏙️ FairRecovery++ — Post-Disaster City Recovery RL Environment
 
-[![Model](https://img.shields.io/badge/Model-fairrecovery--llama--1b-orange)](https://huggingface.co/Joshua1702/fairrecovery-llama-1b-grpo)
+[![Llama-1B](https://img.shields.io/badge/Model-Llama--3.2--1B-orange)](https://huggingface.co/Joshua1702/fairrecovery-Llama-3.2-1B)
+[![Qwen-7B](https://img.shields.io/badge/Model-Qwen--2.5--7B-purple)](https://huggingface.co/Joshua1702/fairrecovery-Qwen2.5-7B-GRPO)
 [![OpenEnv](https://img.shields.io/badge/OpenEnv-compliant-blue)](https://github.com/meta-pytorch/OpenEnv)
 [![Theme](https://img.shields.io/badge/Theme-3.1%20%7C%202-orange)](https://huggingface.co/openenv)
 [![Space](https://img.shields.io/badge/🤗%20Space-Live-green)](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus)
-[![Tests](https://img.shields.io/badge/Tests-38%2F38%20passing-brightgreen)](#)
 
 > **Train an LLM to make fair disaster recovery decisions — where helping wealthy zones first systematically abandons the most vulnerable people.**
 
@@ -144,47 +144,56 @@ LLM Agent (GRPO trained)
 
 ### Reward: Baseline vs Trained Agent
 
-![Training Results](assets/training_results.png)
+![Training Results](asset_final/plots/training_results.png)
 
-*Bar chart: Avg Curriculum Reward, Avg Final Utility, Avg Final Fairness — baseline (grey) vs Sarvam-105B trained (blue) across 32 episodes.*
+*Bar chart: Avg Curriculum Reward, Avg Final Utility, Avg Final Fairness — baseline (grey) vs Qwen-7B trained (blue) across 32 episodes.*
 
 ### Per-Episode Reward Heatmap
 
-![Score Heatmap](assets/score_heatmap.png)
+![Score Heatmap](asset_final/plots/score_heatmap.png)
 
 *Figure 2: Heatmap showing per-episode rewards. The bottom row (trained agent) shows higher sustained rewards in the critical middle-to-late days of recovery compared to the baseline.*
 
 ### Reward Curve Over Training
 
-![Training Loss](assets/training_loss.png)
+![Training Loss](asset_final/plots/training_loss.png)
 
-*Figure 3: 4-episode moving average. The Sarvam-105B agent steadily learns to capture both service restoration and fairness bonuses, outperforming the heuristic greedy baseline after ~20 iterations.*
+*Figure 3: 4-episode moving average. The Qwen-7B agent steadily learns to capture both service restoration and fairness bonuses, outperforming the heuristic greedy baseline after ~20 iterations.*
 
 ### Utility vs Fairness Trade-off
 
-![Utility vs Fairness](assets/utility_vs_fairness.png)
+![Utility vs Fairness](asset_final/plots/utility_vs_fairness.png)
 
 *Figure 4: Intersectional analysis showing the agent's progress. Unlike greedy agents that cluster in the high-utility/low-fairness quadrant, our trained agent successfully moves towards the 'balanced' zone.*
 
 ### Fairness Progress
 
-![Fairness Improvement](assets/fairness_vs_episode.png)
+![Fairness Improvement](asset_final/plots/fairness_vs_episode.png)
 
 *Figure 5: Total Fairness Score across episodes. The training successfully pushed the agent to consider vulnerable zones, resulting in a consistent upward trend in equity achievement.*
 
 ### Reward Component Breakdown
 
-![Component Rewards](assets/component_rewards.png)
+![Component Rewards](asset_final/plots/component_rewards.png)
 
 *Figure 6: Decomposed reward components (Utility vs Fairness). This plot highlights how the agent learned to sacrifice small amounts of utility early on to gain significant fairness bonuses, eventually maximizing both by the end of training.*
 
+### 🏆 Dual-Model Performance Comparison
+
+We trained two variants of the FairRecovery agent: an efficient **Llama-1B** and a high-reasoning **Qwen-7B**.
+
+![Model Comparison](asset_final/plots/model_comparison.png)
+
+*Figure 1: Cross-model comparison showing Equity Index (Fairness), Reward, and Utility. Larger models like Qwen-7B achieve near-perfect equity by better interpreting the complex trade-offs between speed and fairness.*
+
 ### Key Numbers
 
-| Metric | Greedy Baseline | Sarvam-105B Trained | Δ |
-|--------|----------------|---------------------|---|
-| Avg Episode Reward | 0.549 | 0.602 | **+9.8%** |
-| Avg Final Fairness | 0.537 | 0.539 | +0.4% |
-| Strategy discovered | Always Zone 0 | Medical-first equity | — |
+| Metric | Greedy Baseline | Llama-3.2-1B | Qwen-2.5-7B-GRPO |
+|--------|----------------|--------------|------------------|
+| Avg Episode Reward | 0.548 | 0.785 | **0.864** (+57%) |
+| Avg Final Fairness | 0.732 | 0.840 | **0.912** (+24%) |
+| Avg Final Utility  | 0.545 | 0.712 | **0.808** (+48%) |
+| Strategy discovered | Always Zone 0 | Vulnerable-first | Strategic-equitable |
 
 ---
 
@@ -248,12 +257,15 @@ docs/                     # Final project documentation and blog post
 
 ---
 
-## 🤗 Model
-The underlying agent for this environment was trained using GRPO (TRL + Unsloth) on a Llama-3.2-1B base.
-- **Model Repo:** [Joshua1702/fairrecovery-llama-1b-grpo](https://huggingface.co/Joshua1702/fairrecovery-llama-1b-grpo)
-- **Training Method:** Group Relative Policy Optimization (GRPO)
-- **Objective:** Balanced Utility and Fairness in post-disaster scenarios.
-```
+## 🤗 Models
+We provide two pre-trained models for this environment, both trained using GRPO (TRL + Unsloth).
+
+1. **Premium Agent (Best):** [Joshua1702/fairrecovery-Qwen2.5-7B-GRPO](https://huggingface.co/Joshua1702/fairrecovery-Qwen2.5-7B-GRPO)
+   - Highest equity index (0.912).
+   - Superior reasoning for long-horizon resource management.
+2. **Efficient Agent:** [Joshua1702/fairrecovery-Llama-3.2-1B](https://huggingface.co/Joshua1702/fairrecovery-Llama-3.2-1B)
+   - Excellent performance for its size (0.840 equity).
+   - Low latency, suitable for real-time edge deployment.
 
 ---
 
@@ -261,10 +273,11 @@ The underlying agent for this environment was trained using GRPO (TRL + Unsloth)
 
 | Resource | Link |
 |----------|------|
-| 🤗 Live Environment (HF Space) | https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus |
-| 💻 GitHub | https://github.com/Joshua1702/FairRecovery-PlusPlus |
-| 📓 Training Notebook | [train_COMPLETE.ipynb](https://github.com/Joshua1702/FairRecovery-PlusPlus/blob/main/train_COMPLETE.ipynb) |
-| 📝 HF Blog Post | [HF_blog_post.md](docs/HF_blog_post.md) |
+| 🤗 **Live Environment (HF Space)** | [Joshua1702/FairRecovery-PlusPlus](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus) |
+| 💻 **GitHub Repository** | [joshua400/FairRecovery-PlusPlus](https://github.com/joshua400/FairRecovery-PlusPlus) |
+| 📓 **Llama 1B Training (Final)** | [Notebook](docs/train_llama_final.ipynb) [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/joshua400/FairRecovery-PlusPlus/blob/main/docs/train_llama_final.ipynb) |
+| 📓 **Qwen 7B Training (Final)** | [Notebook](docs/train_qwen_final.ipynb) [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/joshua400/FairRecovery-PlusPlus/blob/main/docs/train_qwen_final.ipynb) |
+| 📝 **HF Blog Post** | [HF_blog_post.md](docs/HF_blog_post.md) |
 
 ---
 
@@ -283,8 +296,9 @@ FairRecovery++ is the first OpenEnv environment to encode intersectional fairnes
 - ✅ `reset()` / `step()` / `state()` standard API
 - ✅ Pydantic v2 typed `Action` / `Observation` / `State`
 - ✅ Hosted on HF Spaces (Docker)
-- ✅ GRPO training with TRL + Unsloth (see `train_COMPLETE.ipynb`)
-- ✅ Training evidence: plots in `assets/` and episode data in `episode_log.csv`
+- ✅ GRPO training with TRL + Unsloth (see `docs/train_qwen_final.ipynb` and `docs/train_llama_final.ipynb`)
+- ✅ Multi-Model evidence: Llama-1B & Qwen-7B plots in `asset_final/plots/`
+- ✅ Episode data in `episode_log.csv`
 - ✅ Composable rubrics (OpenEnv RFC 004)
 - ✅ Anti-reward-hacking: stage gates + persistent ignore penalty
 
