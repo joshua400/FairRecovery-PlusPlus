@@ -71,7 +71,7 @@ def _build_app():
                 if _trained_llama is None:
                     logs.append("⏳ *Loading Trained Llama-1B model into GPU (this takes ~30 seconds)...*")
                     yield "\n".join(logs), "### ⏳ Initializing Model..."
-                    _trained_llama = TrainedInferencePolicy(model_name="Joshua1702/fairrecovery-llama-1b-grpo")
+                    _trained_llama = TrainedInferencePolicy(model_name="Joshua1702/fairrecovery-Llama-3.2-1B")
                 policy_fn = _trained_llama
             elif policy_type == "Baseline (Greedy)":
                 policy_fn = greedy_policy
