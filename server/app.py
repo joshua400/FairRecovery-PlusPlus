@@ -149,7 +149,8 @@ def _build_app():
                 with open(readme_path, "r", encoding="utf-8") as f:
                     content = f.read()
                     content = re.sub(r'^---.*?---', '', content, flags=re.DOTALL)
-                    content = content.replace("assets/", "/assets/")
+                    # Correctly resolve images for Gradio Markdown
+                    content = content.replace("evidence/plots/", "file/evidence/plots/")
                     gr.Markdown(content)
 
     @app.get("/")

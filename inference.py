@@ -5,9 +5,16 @@ Updated with Phase-Aware policies and 'service' field compatibility.
 """
 
 from __future__ import annotations
+import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
+try:
+    from peft import PeftModel
+except ImportError:
+    PeftModel = None
 import os
 import json
 import time
+import re
 from typing import Optional, List
 from huggingface_hub import InferenceClient
 from fairrecovery_env.models import ResourceAllocation, FairRecoveryAction, FairRecoveryObservation
@@ -98,13 +105,6 @@ def greedy_policy(obs: FairRecoveryObservation) -> FairRecoveryAction:
 class TrainedInferencePolicy:
     """Local inference for the GRPO-trained models (Llama or Qwen)."""
     def __init__(self, model_name: str = "Joshua1702/fairrecovery-Qwen2.5-7B-GRPO"):
-        import torch
-        from transformers import AutoModelForCausalLM, AutoTokenizer
-        try:
-            from peft import PeftModel
-        except ImportError:
-            PeftModel = None
-
         print(f"Loading model: {model_name}")
         self.tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
         dtype = torch.float16 if torch.cuda.is_available() else torch.float32
