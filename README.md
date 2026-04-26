@@ -15,6 +15,7 @@ pinned: false
 
 [![Llama-1B](https://img.shields.io/badge/Model-Llama--3.2--1B-orange)](https://huggingface.co/Joshua1702/fairrecovery-Llama-3.2-1B)
 [![Qwen-7B](https://img.shields.io/badge/Model-Qwen--2.5--7B-purple)](https://huggingface.co/Joshua1702/fairrecovery-Qwen2.5-7B-GRPO)
+[![Qwen-1.5B](https://img.shields.io/badge/Model-Qwen--2.5--1.5B-blue)](https://www.kaggle.com/code/joshuaragiland/fairevlo-lite)
 [![OpenEnv](https://img.shields.io/badge/OpenEnv-compliant-blue)](https://github.com/meta-pytorch/OpenEnv)
 [![Theme](https://img.shields.io/badge/Theme-3.1%20%7C%202-orange)](https://huggingface.co/openenv)
 [![Space](https://img.shields.io/badge/🤗%20Space-Live-green)](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus)
@@ -112,6 +113,8 @@ We provide two pre-trained models optimized for this environment using GRPO (TRL
     *Best for complex reasoning and near-perfect fairness (Equity: 0.912).*
 *   **Efficient Agent (Llama-1B)**: [Joshua1702/fairrecovery-Llama-3.2-1B](https://huggingface.co/Joshua1702/fairrecovery-Llama-3.2-1B)  
     *Best for low-latency edge deployment with strong equity performance (Equity: 0.840).*
+*   **Lite Agent (Qwen-1.5B)**: [Kaggle Notebook](https://www.kaggle.com/code/joshuaragiland/fairevlo-lite)  
+    *Ideal for rapid prototyping and quick testing cycles.*
 
 ---
 
