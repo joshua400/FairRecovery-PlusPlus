@@ -151,59 +151,41 @@ LLM Agent (GRPO trained)
 
 ---
 
-## 📊 Training Results
+## 📊 Visual Evidence Dashboard
 
-### 🏆 Dual-Model Performance Comparison (Llama-1B vs Qwen-7B)
+In this section, we highlight the most critical performance metrics and fairness improvements achieved during training. These plots provide empirical proof of the agent's ability to navigate the fairness-utility trade-off.
 
-We trained two variants of the FairRecovery agent: an efficient **Llama-1B** and a high-reasoning **Qwen-7B**.
-
+### 🏆 The Winning Metric: Dual-Model Comparison
 ![Model Comparison](asset_final/plots/model_comparison.png)
+*Figure 1: Comparison between Baseline, Llama-1B, and Qwen-7B. Our Premium Qwen-7B agent reaches a near-perfect **0.912 Equity Index**.*
 
-*Figure 1: Cross-model comparison showing Equity Index (Fairness), Reward, and Utility. Qwen-7B achieves near-perfect equity (0.912) by better interpreting the complex trade-offs.*
+### 📈 Training & Strategy Results
 
-### Reward: Baseline vs Trained Agent (Qwen-7B)
+<table align="center">
+  <tr>
+    <td align="center"><b>Baseline vs Trained (Qwen)</b><br><img src="asset_final/plots/training_results.png" width="400"><br><i>Fig 2: 57% reward improvement.</i></td>
+    <td align="center"><b>Reward Heatmap</b><br><img src="asset_final/plots/score_heatmap.png" width="400"><br><i>Fig 3: Consistency across episodes.</i></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Curriculum Learning Curve</b><br><img src="asset_final/plots/training_loss.png" width="400"><br><i>Fig 4: Steady convergence.</i></td>
+    <td align="center"><b>Fairness-Utility Frontier</b><br><img src="asset_final/plots/utility_vs_fairness.png" width="400"><br><i>Fig 5: Escaping the greed trap.</i></td>
+  </tr>
+</table>
 
-![Training Results](asset_final/plots/training_results.png)
-
-*Figure 2: Avg Curriculum Reward, Avg Final Utility, Avg Final Fairness — baseline (grey) vs Qwen-7B trained (blue) across 32 episodes.*
-
-### Per-Episode Reward Heatmap
-
-![Score Heatmap](asset_final/plots/score_heatmap.png)
-
-*Figure 3: Heatmap showing per-episode rewards. The bottom row (trained agent) shows higher sustained rewards in the critical middle-to-late days of recovery compared to the baseline.*
-
-### Reward Curve Over Training
-
-![Training Loss](asset_final/plots/training_loss.png)
-
-*Figure 4: 4-episode moving average. The Qwen-7B agent steadily learns to capture both service restoration and fairness bonuses, outperforming the heuristic greedy baseline after ~20 iterations.*
-
-### Utility vs Fairness Trade-off
-
-![Utility vs Fairness](asset_final/plots/utility_vs_fairness.png)
-
-*Figure 5: Intersectional analysis showing the agent's progress. Unlike greedy agents that cluster in the high-utility/low-fairness quadrant, our trained agent successfully moves towards the 'balanced' zone.*
-
-### Fairness Progress
-
+### ⏱️ Execution Dynamics (Step-by-Step)
 ![Fairness Improvement](asset_final/plots/fairness_vs_episode.png)
-
-*Figure 6: Total Fairness Score across episodes. The training successfully pushed the agent to consider vulnerable zones, resulting in a consistent upward trend in equity achievement.*
-
-### Reward Component Breakdown
+*Figure 6: Global Fairness achievement trend over 32 training cycles.*
 
 ![Component Rewards](asset_final/plots/component_rewards.png)
-
-*Figure 7: Decomposed reward components (Utility vs Fairness). This plot highlights how the agent learned to sacrifice small amounts of utility early on to gain significant fairness bonuses, eventually maximizing both by the end of training.*
-
-### ⏱️ Step-Level Execution Analysis
+*Figure 7: Decomposed reward components showing the sacrifice of immediate utility for long-term equity.*
 
 ![Reward vs Steps](asset_final/plots/reward_vs_steps.png)
-*Figure 8: Reward per step within an episode. The trained agent maintains stable positive rewards even in the difficult middle stages.*
+*Figure 8: Performance stability during the 10-day recovery window.*
 
 ![Fairness vs Steps](asset_final/plots/fairness_vs_steps.png)
-*Figure 9: Cumulative Fairness per step. The agent builds equity linearly by consistently choosing vulnerable zones across the entire episode.*
+*Figure 9: Cumulative equity growth per action.*
+
+---
 
 
 ### Key Numbers
