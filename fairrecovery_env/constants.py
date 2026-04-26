@@ -38,8 +38,14 @@ GRADER_SCORE_MIN: Final[float] = 0.01
 GRADER_SCORE_MAX: Final[float] = 0.99
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Penalties and Rewards
+# Penalties and Rewards (REWARD TUNING)
 # ──────────────────────────────────────────────────────────────────────────────
+REWARD_WEIGHTS = {
+    "exec": 0.5,   # Reduced to stop execution from dominating reward signal
+    "fair": 1.0,   # Doubled to prioritize equity in training
+    "safe": 0.5,   # Penalties for violations
+}
+
 PENALTY_SAFETY_VIOLATION: Final[float] = -0.05
 PENALTY_REPEATED_ACTION: Final[float] = -0.02
 PENALTY_BUDGET_OVERRUN: Final[float] = -0.10

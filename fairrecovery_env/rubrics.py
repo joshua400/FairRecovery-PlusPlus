@@ -41,6 +41,7 @@ class UtilityRubric(BaseRubric):
         if not getattr(observation, "done", False): return 0.0
         zones = getattr(observation, "zones", [])
         if not zones: return 0.0
+        # FIX: service_level -> service
         avg = sum(getattr(z, "service", 0.0) for z in zones) / len(zones)
         return float(self.weight * avg)
     def reset(self) -> None: pass

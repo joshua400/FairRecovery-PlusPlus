@@ -113,16 +113,16 @@ LLM Agent (GRPO trained)
 
 | Component | Formula | Weight | What it teaches |
 |-----------|---------|--------|-----------------|
-| `R_exec` | Avg service improvement this step | 0.5 | Restore services efficiently |
-| `R_fair` | −(avg_service_normal − avg_service_vulnerable) | 1.0 | Don't leave vulnerable zones behind |
+| `R_exec` | Avg service improvement this step | 1.0 | Restore services efficiently |
+| `R_fair` | −(avg\_service\_normal − avg\_service\_vulnerable) | 0.5 | Don't leave vulnerable zones behind |
 | `R_safe` | −0.1 × violations | 0.5 | Respect constraints |
 | `R_analysis` | Overlap(chosen, top-k by damage×vuln) | 0.1 | Correctly identify critical zones |
-| **Terminal bonus** | 0.5×avg_svc + 0.5×(1+R_fair) | — | Long-horizon outcome |
+| **Terminal bonus** | 0.5×avg\_svc + 0.5×(1+R\_fair) | — | Long-horizon outcome |
 
 **Grader score: `0.6 × avg_service + 0.4 × (1 + fairness)` clamped to (0.01, 0.99)**
 
 ### Anti-Reward-Hacking Measures
-- Stage ordering enforced (can't skip analyze → go straight to execute)
+- Stage ordering enforced by shield (can't skip analyze → go straight to execute)
 - Budget overflow: allocations rejected + penalty, state NOT mutated
 - Persistent ignore penalty: if vulnerable zones receive 0 resources for 2+ consecutive days
 - Early-submit blocked until MIN_STEPS reached
@@ -157,6 +157,8 @@ LLM Agent (GRPO trained)
 | Avg Episode Reward | 0.549 | 0.602 | **+9.8%** |
 | Avg Final Fairness | 0.537 | 0.539 | +0.4% |
 | Strategy discovered | Always Zone 0 | Medical-first equity | — |
+
+> The trained agent spontaneously discovered a "medical-first equity" strategy: prioritize Zone 4 with medical resources (highest service impact for most vulnerable) before addressing easier zones.
 
 ---
 
@@ -205,15 +207,14 @@ fairrecovery_env/
 ├── tasks.py              # 3 scenarios: easy / medium / hard (fairness trap)
 ├── rewards.py            # 5-component RLVR reward engine (pure functions)
 ├── rubrics.py            # RFC 004 composable rubrics
-├── shield.py             # Safety validator (blocks before mutation)
-└── __init__.py           # Package exports
+└── shield.py             # Safety validator (blocks before mutation)
 
 server/
 ├── fairrecovery_environment.py   # OpenEnv Environment class
-└── app.py                        # FastAPI + OpenEnv integration + Gradio UI
+└── app.py                        # FastAPI + OpenEnv integration
 
 client.py                 # Typed HTTP client
-inference.py              # Baseline policies (greedy, fairness-aware, random, HF LLM)
+inference.py              # Baseline policies (greedy, fairness-aware, random)
 train_COMPLETE.ipynb      # GRPO training notebook (TRL + Unsloth)
 generate_summary_plots.py # Reproduce all plots from episode_log.csv
 ```
@@ -226,8 +227,9 @@ generate_summary_plots.py # Reproduce all plots from episode_log.csv
 |----------|------|
 | 🤗 Live Environment (HF Space) | https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus |
 | 💻 GitHub | https://github.com/joshua400/FairRecovery-PlusPlus |
-| 📓 Training Notebook | [train_COMPLETE.ipynb](train_COMPLETE.ipynb) |
-| 📝 HF Blog Post | [HF_blog_post.md](to%20fix/HF_blog_post.md) |
+| 📓 Training Notebook | train_COMPLETE.ipynb (Colab-ready) |
+| 📝 HF Blog Post | [ADD LINK AFTER PUBLISHING] |
+| 🎥 Demo Video | [ADD LINK AFTER RECORDING] |
 
 ---
 
@@ -235,7 +237,7 @@ generate_summary_plots.py # Reproduce all plots from episode_log.csv
 
 Post-disaster recovery planning is a $200B/year global challenge. AI systems that optimize only for speed or total utility **systematically disadvantage the most vulnerable populations** — the elderly, disabled, and low-income communities who live in the hardest-hit zones.
 
-FairRecovery++ is the first OpenEnv environment to encode intersectional fairness as a verifiable, first-class RL objective, making it a research-grade benchmark for safe and fair LLM agent training.
+FairRecovery++ is the first OpenEnv environment to encode intersectional fairness as a verifiable, first-class RL objective, making it a research-grade benchmark for safe and fair LLM agent training. The environment can be extended to vaccination rollout, hospital resource allocation, or any domain where efficiency vs equity trade-offs matter.
 
 ---
 
@@ -249,7 +251,7 @@ FairRecovery++ is the first OpenEnv environment to encode intersectional fairnes
 - ✅ GRPO training with TRL + Unsloth (see `train_COMPLETE.ipynb`)
 - ✅ Training evidence: plots in `assets/` and episode data in `episode_log.csv`
 - ✅ Composable rubrics (OpenEnv RFC 004)
-- ✅ Anti-reward-hacking: stage gates + persistent ignore penalty
+- ✅ Anti-reward-hacking: shield + stage gates + persistent ignore penalty
 
 ---
 

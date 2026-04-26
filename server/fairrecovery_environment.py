@@ -1,12 +1,12 @@
 """
 FairRecovery++ — Core Environment.
 
-Perfectly aligned with OpenEnv patterns and reference project structure.
+Updated with critical bug fixes from bug_fixes.py.
 """
 
 from __future__ import annotations
 import uuid
-from typing import Any, Optional
+from typing import Any, Optional, List
 import structlog
 
 from openenv.core.env_server.interfaces import Environment
@@ -21,6 +21,7 @@ from fairrecovery_env.models import (
 )
 from fairrecovery_env.rewards import RewardEngine
 from fairrecovery_env.tasks import get_task, TaskDefinition
+from fairrecovery_env.rubrics import CompositeRubric
 
 logger = structlog.get_logger(__name__)
 
@@ -34,7 +35,9 @@ class FairRecoveryEnvironment(Environment):
         self._state: Optional[FairRecoveryState] = None
         self._task: Optional[TaskDefinition] = None
         self._reward_engine: Optional[RewardEngine] = None
+        self._rubrics = CompositeRubric()
         self._action_history: list[str] = []
+        self._pending_violations: List[str] = []
 
     def reset(
         self,
@@ -47,11 +50,11 @@ class FairRecoveryEnvironment(Environment):
         resolved_task_id = TaskID(task_id) if task_id else TaskID.FLOOD_EASY
         self._task = get_task(resolved_task_id)
         self._reward_engine = RewardEngine(self._task)
+        self._rubrics.reset()
         self._action_history = []
+        self._pending_violations = []
 
         ep_id = episode_id or str(uuid.uuid4())
-        
-        # Deep copy initial zones
         zones = [ZoneState(**z.model_dump()) for z in self._task.initial_zones]
         
         self._state = FairRecoveryState(
@@ -64,14 +67,13 @@ class FairRecoveryEnvironment(Environment):
             difficulty=self._task.difficulty,
         )
 
-        return self._build_observation("Environment reset. Begin disaster recovery.")
+        return self._build_observation("Environment reset.")
 
     def step(self, action: Action, **kwargs: Any) -> FairRecoveryObservation:
         """Execute a recovery step."""
         if self._state is None or self._reward_engine is None:
             return FairRecoveryObservation(done=True, reward=0.0, step_feedback="Reset first.")
 
-        # Parse action
         try:
             if isinstance(action, FairRecoveryAction):
                 typed_action = action
@@ -85,19 +87,44 @@ class FairRecoveryEnvironment(Environment):
         self._state.step_count += 1
         self._action_history.append(typed_action.action_type.value)
         
-        # 1. Update Day Counter
-        # Sequence: Analyze -> Allocate -> Execute -> Day++
-        if typed_action.action_type == ActionType.EXECUTE:
-            self._execute_phase(typed_action)
-            self._state.day += 1
-        elif typed_action.action_type == ActionType.ALLOCATE:
-            self._allocate_phase(typed_action)
+        reward = 0.0
+        feedback = ""
 
-        # 2. Compute Reward
-        reward, feedback = self._reward_engine.compute_reward(typed_action, self._state)
+        # 1. Processing Phases
+        if typed_action.action_type == ActionType.EXECUTE:
+            # FIX: CAPTURE allocated zones BEFORE execution potentially changes state
+            # In our current structure, we don't have a 'pending' list, but we have the current action.
+            # However, if 'allocate' was a separate step, we need to know what was allocated.
+            # For simplicity, we check the action's own allocations if it was a combo,
+            # or we look at service increases in the zones.
+            
+            # Let's assume the user wants the RewardEngine to see what was JUST allocated.
+            # We'll extract zone IDs from the most recent 'allocate' action if available.
+            allocated_ids = frozenset()
+            if typed_action.allocations:
+                allocated_ids = frozenset(a.zone for a in typed_action.allocations)
+            
+            self._execute_phase(typed_action)
+            
+            components = self._reward_engine.compute_execute_step(
+                state=self._state,
+                violations=self._pending_violations,
+                allocated_zone_ids=allocated_ids
+            )
+            reward = components.R_total
+            feedback = components.feedback
+            self._state.day += 1
+            self._pending_violations = [] # Clear after execution reward processed
+            
+        else:
+            if typed_action.action_type == ActionType.ALLOCATE:
+                self._allocate_phase(typed_action)
+            
+            reward, feedback = self._reward_engine.compute_reward(typed_action, self._state)
+
         self._state.cumulative_reward = self._reward_engine.cumulative_reward
 
-        # 3. Check Termination
+        # 2. Check Termination
         is_done = (
             typed_action.action_type == ActionType.SUBMIT or
             self._state.day > MAX_DAYS or
@@ -105,42 +132,49 @@ class FairRecoveryEnvironment(Environment):
         )
         self._state.is_done = is_done
 
-        return self._build_observation(feedback)
+        # 3. Build Observation
+        obs = self._build_observation(feedback)
+        
+        # FIX: Rubric score flow to obs.reward
+        rubric_score = self._rubrics.forward(typed_action, obs)
+        if rubric_score != 0.0:
+            self._state.cumulative_reward += rubric_score
+            obs.cumulative_reward = self._state.cumulative_reward
+            obs.reward = round(float(reward + rubric_score), 4)
+        else:
+            obs.reward = round(float(reward), 4)
+
+        return obs
 
     def _allocate_phase(self, action: FairRecoveryAction):
-        """Process resource allocations."""
-        if not action.allocations:
-            return
-
+        if not action.allocations: return
         for alloc in action.allocations:
-            cost = {
-                ResourceType.MEDICAL: COST_MEDICAL,
-                ResourceType.WATER: COST_WATER,
-                ResourceType.POWER: COST_POWER
-            }.get(alloc.resource, 0.0)
+            try:
+                zone_id = int(alloc.zone)
+                cost = {
+                    ResourceType.MEDICAL: COST_MEDICAL,
+                    ResourceType.WATER: COST_WATER,
+                    ResourceType.POWER: COST_POWER
+                }.get(alloc.resource, 0.0)
 
-            if self._state.budget_remaining >= cost:
-                self._state.budget_remaining -= cost
-                zone = self._state.zones[alloc.zone]
-                # Resources reduce damage and increase service level
-                zone.damage = max(0.0, zone.damage - 0.05)
-                zone.service_level = min(1.0, zone.service_level + 0.1)
-            else:
-                self._state.violations_total += 1
+                if self._state.budget_remaining >= cost and 0 <= zone_id < len(self._state.zones):
+                    self._state.budget_remaining -= cost
+                    zone = self._state.zones[zone_id]
+                    zone.damage = max(0.0, zone.damage - 0.05)
+                    zone.service_level = min(1.0, zone.service_level + 0.1)
+                else:
+                    self._state.violations_total += 1
+                    self._pending_violations.append(f"invalid_allocation:{zone_id}")
+            except:
+                self._pending_violations.append("malformed_allocation")
 
     def _execute_phase(self, action: FairRecoveryAction):
-        """Natural environment progression (deterioration if no service)."""
         for zone in self._state.zones:
-            # Deterioration
             if zone.service_level < 0.2:
                 zone.damage = min(1.0, zone.damage + 0.02)
-            # Service decay
             zone.service_level = max(0.0, zone.service_level - 0.05)
 
     def _build_observation(self, feedback: str) -> FairRecoveryObservation:
-        """Construct a FairRecoveryObservation from current state."""
-        
-        # Calculate Equity for observation
         services = [z.service_level for z in self._state.zones]
         avg_svc = sum(services) / len(services)
         mad = sum(abs(s - avg_svc) for s in services) / len(services)
@@ -150,12 +184,12 @@ class FairRecoveryEnvironment(Environment):
 
         return FairRecoveryObservation(
             done=self._state.is_done,
-            reward=0.0, # Per-step reward is handled by cumulative
+            reward=0.0, 
             day=self._state.day,
             budget_left=self._state.budget_remaining,
             zones=self._state.zones,
             fairness_score=equity,
-            step_stage="dynamic", # Could be more granular
+            step_stage="dynamic",
             steps_remaining=MAX_STEPS_PER_EPISODE - self._state.step_count,
             cumulative_reward=self._state.cumulative_reward,
             action_history=list(self._action_history),
@@ -164,6 +198,6 @@ class FairRecoveryEnvironment(Environment):
             metadata={"grader_score": grader_score}
         )
 
-    @property
+    # FIX: state as method, not property
     def state(self) -> FairRecoveryState:
         return self._state

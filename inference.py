@@ -1,8 +1,7 @@
 """
 FairRecovery++ — Advanced Inference & LLM Connectivity.
 
-Integrates Hugging Face Inference API for real-time decision making
-and trajectory logging for training data generation.
+Updated with Phase-Aware policies and 'service' field compatibility.
 """
 
 from __future__ import annotations
@@ -49,11 +48,11 @@ class HFInferencePolicy:
             content = response.choices[0].message.content
             return self._parse_response(content, obs)
         except Exception as e:
-            # Fallback to a simple heuristic if API fails
             return FairRecoveryAction(action_type=ActionType.ANALYZE, reasoning=f"API Error: {str(e)}")
 
     def _build_prompt(self, obs: FairRecoveryObservation) -> str:
-        zones_info = "\n".join([f"Zone {z.zone_id}: Damage={z.damage:.2f}, Vulnerability={z.vulnerable_ratio:.2f}, Svc={z.service_level:.2f}" for z in obs.zones])
+        # FIX: z.service_level -> z.service
+        zones_info = "\n".join([f"Zone {z.zone_id}: Damage={z.damage:.2f}, Vulnerability={z.vulnerable_ratio:.2f}, Svc={z.service:.2f}" for z in obs.zones])
         return f"""
 You are an Emergency Recovery Agent. 
 Environment: {zones_info}
@@ -63,21 +62,16 @@ Budget Left: {obs.budget_left:.2f}
 Goal: Maximize Utility AND Fairness.
 Format your response as valid JSON:
 {{"action_type": "analyze"|"allocate"|"execute", "zone": <int>, "reasoning": "<str>"}}
-
-Choose "analyze" to scan a zone, "allocate" to send resources (MEDICAL to <zone>), or "execute" to finish the day.
 """
 
     def _parse_response(self, content: str, obs: FairRecoveryObservation) -> FairRecoveryAction:
         try:
-            # Extract JSON from potential conversational filler
             match = __import__("re").search(r"\{.*\}", content, __import__("re").DOTALL)
             data = json.loads(match.group(0)) if match else json.loads(content)
-            
             a_type = ActionType(data["action_type"].lower())
             allocs = None
             if a_type == ActionType.ALLOCATE:
                 allocs = [ResourceAllocation(zone=data.get("zone", 0), resource=ResourceType.MEDICAL)]
-            
             return FairRecoveryAction(
                 action_type=a_type,
                 critical_zones=[data.get("zone", 0)] if a_type == ActionType.ANALYZE else None,
@@ -85,9 +79,8 @@ Choose "analyze" to scan a zone, "allocate" to send resources (MEDICAL to <zone>
                 reasoning=data.get("reasoning", "LLM decision.")
             )
         except:
-            return FairRecoveryAction(action_type=ActionType.EXECUTE, reasoning="Parse failed, auto-executing.")
+            return FairRecoveryAction(action_type=ActionType.EXECUTE, reasoning="Parse failed.")
 
-# Standard heuristic policies for comparison
 def _get_phase_action(obs: FairRecoveryObservation) -> ActionType:
     num_steps = len(obs.action_history)
     cycle_pos = num_steps % 3
