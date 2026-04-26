@@ -226,9 +226,12 @@ In this section, we highlight the most critical performance metrics and fairness
 
 We trained using GRPO with Unsloth acceleration.
 
-- **Models:** Llama-3.2-1B & Qwen-2.5-7B (4-bit)
+- **Models:** Llama-3.2-1B, Qwen-2.5-1.5B, & Qwen-2.5-7B (4-bit)
 - **Iteration Strategy:** We intentionally used a smaller model (Llama-1B) for rapid iteration and stable learning, then scaled to Qwen-7B for final performance.
-- **Outcome:** Loss decreased steadily over time while reward converged.
+- **Qwen-1.5B Quick-Test:**
+  - **Episodes:** 20–50 (multiple seeds)
+  - **Runtime:** < 20 min on T4 (Kaggle)
+  - **Outcome:** Loss decreased steadily over time while reward converged.
 
 📊 **Training Loss (Curriculum)**
 ![Training Loss](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus/resolve/main/evidence/plots/training_loss.png)
