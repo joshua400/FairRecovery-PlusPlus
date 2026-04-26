@@ -1,78 +1,70 @@
 """
-FairRecovery++ — Scenario Definitions.
+FairRecovery++ — Task Definitions.
 
-Three scenarios of increasing difficulty with fairness traps.
+Pre-configured disaster scenarios for training and evaluation.
 """
 
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import Dict, List
-from .constants import Difficulty
+from typing import List, Dict
+from pydantic import BaseModel
+from .constants import TaskID, Difficulty, NUM_ZONES
+from .models import ZoneState
 
 
-@dataclass
-class ScenarioConfig:
-    """Immutable task configuration for one scenario."""
-    task_id: str
+class TaskDefinition(BaseModel):
+    """Configuration for a specific disaster scenario."""
+    task_id: TaskID
     difficulty: Difficulty
+    title: str
     description: str
-    initial_budget: float
-    zones: List[Dict]
-    hint: str = ""
+    initial_zones: List[ZoneState]
+    budget_limit: float = 1.0
 
 
-TASKS: Dict[str, ScenarioConfig] = {
-    "easy": ScenarioConfig(
-        task_id="easy_3zone", difficulty=Difficulty.EASY,
-        description="3-zone post-flood scenario. One zone has moderate damage and high vulnerability.",
-        initial_budget=80.0,
-        hint="Focus on the zone with highest vulnerability × damage.",
-        zones=[
-            {"zone_id": 0, "damage": 0.30, "service": 0.70, "vulnerable_ratio": 0.15},
-            {"zone_id": 1, "damage": 0.80, "service": 0.20, "vulnerable_ratio": 0.85},
-            {"zone_id": 2, "damage": 0.20, "service": 0.80, "vulnerable_ratio": 0.10},
-        ],
-    ),
-    "medium": ScenarioConfig(
-        task_id="medium_5zone", difficulty=Difficulty.MEDIUM,
-        description="5-zone earthquake scenario. Multiple zones damaged. Budget is constrained.",
-        initial_budget=60.0,
-        hint="Budget is limited. Prioritise zones with high damage AND vulnerability.",
-        zones=[
-            {"zone_id": 0, "damage": 0.40, "service": 0.60, "vulnerable_ratio": 0.30},
-            {"zone_id": 1, "damage": 0.70, "service": 0.30, "vulnerable_ratio": 0.75},
-            {"zone_id": 2, "damage": 0.50, "service": 0.50, "vulnerable_ratio": 0.50},
-            {"zone_id": 3, "damage": 0.65, "service": 0.35, "vulnerable_ratio": 0.65},
-            {"zone_id": 4, "damage": 0.15, "service": 0.85, "vulnerable_ratio": 0.20},
-        ],
-    ),
-    "hard": ScenarioConfig(
-        task_id="hard_5zone_fairness_trap", difficulty=Difficulty.HARD,
-        description=(
-            "5-zone hurricane — FAIRNESS TRAP + ADVERSARIAL AGENTS. "
-            "Zone 0 is wealthy (low vulnerability). Zone 4 is an informal settlement "
-            "(highest vulnerability × damage). Multi-agent dynamics add disruptions."
-        ),
-        initial_budget=45.0,
-        hint=(
-            "FAIRNESS TRAP: Zone 0 looks easy but has low vulnerability. "
-            "Zone 4 has highest damage AND vulnerability — prioritise it. "
-            "Watch for adversarial disruptions and adapt your strategy."
-        ),
-        zones=[
-            {"zone_id": 0, "damage": 0.35, "service": 0.65, "vulnerable_ratio": 0.08},
-            {"zone_id": 1, "damage": 0.50, "service": 0.50, "vulnerable_ratio": 0.40},
-            {"zone_id": 2, "damage": 0.60, "service": 0.40, "vulnerable_ratio": 0.55},
-            {"zone_id": 3, "damage": 0.72, "service": 0.28, "vulnerable_ratio": 0.72},
-            {"zone_id": 4, "damage": 0.92, "service": 0.08, "vulnerable_ratio": 0.96},
-        ],
-    ),
-}
-
-
-def get_task(difficulty: str) -> ScenarioConfig:
-    """Retrieve scenario config by difficulty string."""
-    task = TASKS.get(difficulty)
-    if task is None:
-        raise ValueError(f"Unknown difficulty '{difficulty}'. Choose from: {list(TASKS.keys())}")
-    return task
+def get_task(task_id: TaskID) -> TaskDefinition:
+    """Retrieve a pre-configured task definition."""
+    
+    if task_id == TaskID.FLOOD_EASY:
+        return TaskDefinition(
+            task_id=task_id,
+            difficulty=Difficulty.EASY,
+            title="Monsoon Flash Flood",
+            description="Moderate damage in urban zones. Clear priorities.",
+            initial_zones=[
+                ZoneState(zone_id=0, damage=0.2, vulnerable_ratio=0.1),
+                ZoneState(zone_id=1, damage=0.3, vulnerable_ratio=0.2),
+                ZoneState(zone_id=2, damage=0.2, vulnerable_ratio=0.15),
+                ZoneState(zone_id=3, damage=0.4, vulnerable_ratio=0.3),
+                ZoneState(zone_id=4, damage=0.5, vulnerable_ratio=0.5),
+            ]
+        )
+    
+    elif task_id == TaskID.EARTHQUAKE_MEDIUM:
+        return TaskDefinition(
+            task_id=task_id,
+            difficulty=Difficulty.MEDIUM,
+            title="7.2 Magnitude Earthquake",
+            description="Heavy damage across central districts. Power grid failure.",
+            initial_zones=[
+                ZoneState(zone_id=0, damage=0.4, vulnerable_ratio=0.1),
+                ZoneState(zone_id=1, damage=0.6, vulnerable_ratio=0.4),
+                ZoneState(zone_id=2, damage=0.5, vulnerable_ratio=0.3),
+                ZoneState(zone_id=3, damage=0.7, vulnerable_ratio=0.6),
+                ZoneState(zone_id=4, damage=0.8, vulnerable_ratio=0.8),
+            ]
+        )
+    
+    else:  # MULTI_DISASTER_HARD
+        return TaskDefinition(
+            task_id=TaskID.MULTI_DISASTER_HARD,
+            difficulty=Difficulty.HARD,
+            title="The Fairness Trap: Urban Cyclone",
+            description="Zone 4 is critical but ignored by greedy planners.",
+            initial_zones=[
+                ZoneState(zone_id=0, damage=0.15, vulnerable_ratio=0.08),
+                ZoneState(zone_id=1, damage=0.35, vulnerable_ratio=0.40),
+                ZoneState(zone_id=2, damage=0.42, vulnerable_ratio=0.55),
+                ZoneState(zone_id=3, damage=0.72, vulnerable_ratio=0.72),
+                ZoneState(zone_id=4, damage=0.92, vulnerable_ratio=0.96), # The Fairness Trap
+            ]
+        )
