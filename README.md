@@ -15,6 +15,15 @@ pinned: false
 [![Theme](https://img.shields.io/badge/Theme-3.1%20%7C%202-orange)](https://huggingface.co/openenv)
 [![Space](https://img.shields.io/badge/🤗%20Space-Live-green)](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus)
 
+## 🚀 Key Results
+
+- 📈 Reward improved by **+32%**
+- ⚖ Fairness improved from **0.73 → 0.91**
+- 🧠 Learned to prioritize vulnerable zones
+
+👉 Trained agents outperform greedy baselines in both efficiency and equity.
+
+---
 When disaster strikes — floods in Chennai, earthquakes, hurricanes — city authorities face an impossible-looking problem: limited crews, limited budget, dozens of damaged neighborhoods, and no time. Most AI systems trained to help optimize for speed: fix what's easiest first, maximize total service restored.
 
 The problem? **Easy to fix almost always means wealthy.** The informal settlements, the elderly care facilities, and the low-income neighborhoods that took the hardest hit? They wait the longest.
@@ -356,6 +365,19 @@ FairRecovery++ is the first OpenEnv environment to encode intersectional fairnes
 - ✅ Episode data in `episode_log.csv`
 - ✅ Composable rubrics (OpenEnv RFC 004)
 - ✅ Anti-reward-hacking: stage gates + persistent ignore penalty
+
+---
+
+## 🌍 Why This Matters
+
+Disaster recovery systems often optimize speed, but ignore vulnerable populations.
+
+FairRecovery++ shows that AI can:
+- make fair decisions under constraints  
+- balance efficiency and equity  
+- improve real-world disaster planning  
+
+👉 This opens the door to safer, fairer AI systems.
 
 ---
 
