@@ -343,6 +343,7 @@ docs/                     # 📝 Documentation & Reports
 | 💻 **GitHub** | [joshua400/FairRecovery-PlusPlus](https://github.com/joshua400/FairRecovery-PlusPlus) |
 | 📓 **Llama Training** | [Notebook](docs/train_llama_final.ipynb) [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/joshua400/FairRecovery-PlusPlus/blob/main/docs/train_llama_final.ipynb) |
 | 📓 **Qwen Training** | [Notebook](docs/train_qwen_final.ipynb) [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/joshua400/FairRecovery-PlusPlus/blob/main/docs/train_qwen_final.ipynb) |
+| 🧪 **Quick Testing (1.5B)** | [Kaggle Notebook](https://www.kaggle.com/code/joshuaragiland/fairevlo-lite) |
 | 📝 **HF Blog Post** | [blog.md](blog.md) |
 
 ---
