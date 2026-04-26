@@ -154,6 +154,7 @@ def _build_app():
             model_comp_img = base_path + "model_comparison.png"
             reward_steps_img = base_path + "reward_vs_steps.png"
             fairness_steps_img = base_path + "fairness_vs_steps.png"
+            reward_img = base_path + "reward_vs_episode.png"
             extra_img = base_path + "training_metrics_extra.png"
             extra_img_2 = base_path + "training_metrics_extra_2.png"
 
