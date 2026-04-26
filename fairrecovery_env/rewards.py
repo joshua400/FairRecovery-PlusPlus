@@ -145,10 +145,12 @@ class RewardEngine:
         )
         return round(max(GRADER_SCORE_MIN, min(GRADER_SCORE_MAX, final_score)), 4)
 
-def compute_fairness_reward(zones: List[ZoneState]) -> float:
-    # Helper for external calls
-    services = [z.service_level for z in zones]
-    mean_svc = sum(services) / len(services)
-    if mean_svc == 0: return 0.5
-    mad = sum(abs(s - mean_svc) for s in services) / len(services)
-    return 1.0 - mad
+class TaskGrader:
+    """Grader for evaluating trained models."""
+    def __init__(self, task_id: str) -> None:
+        from .tasks import TaskID, get_task
+        self._task = get_task(TaskID(task_id))
+        self._engine = RewardEngine(self._task)
+
+    def grade(self, state: FairRecoveryState) -> float:
+        return self._engine.get_final_score(state)
