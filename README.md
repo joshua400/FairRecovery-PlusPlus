@@ -225,6 +225,7 @@ client.py                 # Typed HTTP client
 inference.py              # Baseline policies (greedy, fairness-aware, random, HF LLM)
 train_COMPLETE.ipynb      # GRPO training notebook (TRL + Unsloth)
 generate_summary_plots.py # Reproduce all plots from episode_log.csv
+docs/                     # Final project documentation and blog post
 ```
 
 ---
@@ -234,9 +235,9 @@ generate_summary_plots.py # Reproduce all plots from episode_log.csv
 | Resource | Link |
 |----------|------|
 | 🤗 Live Environment (HF Space) | https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus |
-| 💻 GitHub | https://github.com/joshua400/FairRecovery-PlusPlus |
-| 📓 Training Notebook | [train_COMPLETE.ipynb](train_COMPLETE.ipynb) |
-| 📝 HF Blog Post | [HF_blog_post.md](to%20fix/HF_blog_post.md) |
+| 💻 GitHub | https://github.com/Joshua1702/FairRecovery-PlusPlus |
+| 📓 Training Notebook | [train_COMPLETE.ipynb](https://github.com/Joshua1702/FairRecovery-PlusPlus/blob/main/train_COMPLETE.ipynb) |
+| 📝 HF Blog Post | [HF_blog_post.md](docs/HF_blog_post.md) |
 
 ---
 
