@@ -1,3 +1,12 @@
+---
+title: FairRecovery++
+emoji: 🏙️
+colorFrom: orange
+colorTo: red
+sdk: docker
+pinned: false
+---
+
 # 🏙️ FairRecovery++ — Post-Disaster City Recovery RL Environment
 
 [![OpenEnv](https://img.shields.io/badge/OpenEnv-compliant-blue)](https://github.com/meta-pytorch/OpenEnv)
