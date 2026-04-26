@@ -215,6 +215,8 @@ In this section, we highlight the most critical performance metrics and fairness
 
 We trained using GRPO with Unsloth acceleration.
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1kCNZReawhQNDir8eLp-jrFuP1HO9n0Xr?usp=sharing)
+
 - **Models:** Llama-3.2-1B & Qwen-2.5-7B (4-bit)
 - **Training duration:** 32 full environment episodes
 - **Outcome:** Loss decreased steadily over time while reward converged.
