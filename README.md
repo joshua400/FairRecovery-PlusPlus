@@ -248,7 +248,9 @@ We trained using GRPO with Unsloth acceleration.
 
 **Fairness-Utility Frontier**
 ![Utility vs Fairness](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus/resolve/main/evidence/plots/utility_vs_fairness.png)
-*Figure 4: Escaping the greed trap.*
+**Extended Training Metrics**
+![Extra Metrics](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus/resolve/main/evidence/plots/training_metrics_extra.png)
+*Figure 5: Detailed convergence and stability metrics.*
 
 ### ⏱️ Execution Dynamics (Step-by-Step)
 
