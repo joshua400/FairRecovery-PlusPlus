@@ -124,7 +124,7 @@ def _build_app():
             
             # Use absolute filesystem paths for gr.Image
             base_dir = os.path.dirname(os.path.dirname(__file__))
-            asset_plots = os.path.join(base_dir, "asset_final", "plots")
+            asset_plots = os.path.join(base_dir, "evidence", "plots")
             results_img = os.path.join(asset_plots, "training_results.png")
             heatmap_img = os.path.join(asset_plots, "score_heatmap.png")
             loss_img = os.path.join(asset_plots, "training_loss.png")

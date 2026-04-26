@@ -156,33 +156,33 @@ LLM Agent (GRPO trained)
 In this section, we highlight the most critical performance metrics and fairness improvements achieved during training. These plots provide empirical proof of the agent's ability to navigate the fairness-utility trade-off.
 
 ### 🏆 The Winning Metric: Dual-Model Comparison
-![Model Comparison](asset_final/plots/model_comparison.png)
+![Model Comparison](evidence/plots/model_comparison.png)
 *Figure 1: Comparison between Baseline, Llama-1B, and Qwen-7B. Our Premium Qwen-7B agent reaches a near-perfect **0.912 Equity Index**.*
 
 ### 📈 Training & Strategy Results
 
 <table align="center">
   <tr>
-    <td align="center"><b>Baseline vs Trained (Qwen)</b><br><img src="asset_final/plots/training_results.png" width="400"><br><i>Fig 2: 57% reward improvement.</i></td>
-    <td align="center"><b>Reward Heatmap</b><br><img src="asset_final/plots/score_heatmap.png" width="400"><br><i>Fig 3: Consistency across episodes.</i></td>
+    <td align="center"><b>Baseline vs Trained (Qwen)</b><br><img src="evidence/plots/training_results.png" width="400"><br><i>Fig 2: 57% reward improvement.</i></td>
+    <td align="center"><b>Reward Heatmap</b><br><img src="evidence/plots/score_heatmap.png" width="400"><br><i>Fig 3: Consistency across episodes.</i></td>
   </tr>
   <tr>
-    <td align="center"><b>Curriculum Learning Curve</b><br><img src="asset_final/plots/training_loss.png" width="400"><br><i>Fig 4: Steady convergence.</i></td>
-    <td align="center"><b>Fairness-Utility Frontier</b><br><img src="asset_final/plots/utility_vs_fairness.png" width="400"><br><i>Fig 5: Escaping the greed trap.</i></td>
+    <td align="center"><b>Curriculum Learning Curve</b><br><img src="evidence/plots/training_loss.png" width="400"><br><i>Fig 4: Steady convergence.</i></td>
+    <td align="center"><b>Fairness-Utility Frontier</b><br><img src="evidence/plots/utility_vs_fairness.png" width="400"><br><i>Fig 5: Escaping the greed trap.</i></td>
   </tr>
 </table>
 
 ### ⏱️ Execution Dynamics (Step-by-Step)
-![Fairness Improvement](asset_final/plots/fairness_vs_episode.png)
+![Fairness Improvement](evidence/plots/fairness_vs_episode.png)
 *Figure 6: Global Fairness achievement trend over 32 training cycles.*
 
-![Component Rewards](asset_final/plots/component_rewards.png)
+![Component Rewards](evidence/plots/component_rewards.png)
 *Figure 7: Decomposed reward components showing the sacrifice of immediate utility for long-term equity.*
 
-![Reward vs Steps](asset_final/plots/reward_vs_steps.png)
+![Reward vs Steps](evidence/plots/reward_vs_steps.png)
 *Figure 8: Performance stability during the 10-day recovery window.*
 
-![Fairness vs Steps](asset_final/plots/fairness_vs_steps.png)
+![Fairness vs Steps](evidence/plots/fairness_vs_steps.png)
 *Figure 9: Cumulative equity growth per action.*
 
 ---
@@ -284,7 +284,7 @@ FairRecovery++ is the first OpenEnv environment to encode intersectional fairnes
 - ✅ Pydantic v2 typed `Action` / `Observation` / `State`
 - ✅ Hosted on HF Spaces (Docker)
 - ✅ GRPO training with TRL + Unsloth (see `docs/train_qwen_final.ipynb` and `docs/train_llama_final.ipynb`)
-- ✅ Multi-Model evidence: Llama-1B & Qwen-7B plots in `asset_final/plots/`
+- ✅ Multi-Model evidence: Llama-1B & Qwen-7B plots in `evidence/plots/`
 - ✅ Episode data in `episode_log.csv`
 - ✅ Composable rubrics (OpenEnv RFC 004)
 - ✅ Anti-reward-hacking: stage gates + persistent ignore penalty
