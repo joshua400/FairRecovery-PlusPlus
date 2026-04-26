@@ -55,24 +55,28 @@ def _build_app():
         logs.append(f"### 🚀 SESSION: {policy_type.upper()}")
         
         # Policy Selection
-        if policy_type == "Live LLM (Llama-3)":
-            if not hf_token or hf_token.strip() == "":
-                return "### ❌ Error\nPlease provide a Hugging Face Token in the sidebar to use the Live LLM.", ""
-            policy_fn = HFInferencePolicy(token=hf_token)
-        elif "Qwen" in policy_type:
-            if _trained_qwen is None:
-                logs.append("⏳ *Loading Trained Qwen-7B model into GPU...*")
-                _trained_qwen = TrainedInferencePolicy(model_name="Joshua1702/fairrecovery-Qwen2.5-7B-GRPO")
-            policy_fn = _trained_qwen
-        elif "Llama-1B-GRPO" in policy_type:
-            if _trained_llama is None:
-                logs.append("⏳ *Loading Trained Llama-1B model into GPU...*")
-                _trained_llama = TrainedInferencePolicy(model_name="Joshua1702/fairrecovery-llama-1b-grpo")
-            policy_fn = _trained_llama
-        elif policy_type == "Baseline (Greedy)":
-            policy_fn = greedy_policy
-        else:
-            policy_fn = fairness_aware_policy
+        try:
+            if policy_type == "Live LLM (Llama-3)":
+                if not hf_token or hf_token.strip() == "":
+                    return "### ❌ Error\nPlease provide a Hugging Face Token in the sidebar to use the Live LLM.", ""
+                policy_fn = HFInferencePolicy(token=hf_token)
+            elif "Qwen" in policy_type:
+                if _trained_qwen is None:
+                    logs.append("⏳ *Loading Trained Qwen-7B model into GPU...*")
+                    _trained_qwen = TrainedInferencePolicy(model_name="Joshua1702/fairrecovery-Qwen2.5-7B-GRPO")
+                policy_fn = _trained_qwen
+            elif "Llama-1B-GRPO" in policy_type:
+                if _trained_llama is None:
+                    logs.append("⏳ *Loading Trained Llama-1B model into GPU...*")
+                    _trained_llama = TrainedInferencePolicy(model_name="Joshua1702/fairrecovery-llama-1b-grpo")
+                policy_fn = _trained_llama
+            elif policy_type == "Baseline (Greedy)":
+                policy_fn = greedy_policy
+            else:
+                policy_fn = fairness_aware_policy
+        except Exception as e:
+            logs.append(f"❌ **Model Error:** {str(e)}")
+            return "\n".join(logs), f"### ❌ Initialization Failed\nCheck logs for details."
         
         done = False
         while not done:
