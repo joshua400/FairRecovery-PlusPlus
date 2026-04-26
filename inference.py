@@ -101,7 +101,9 @@ class TrainedInferencePolicy:
         import torch
         from transformers import AutoModelForCausalLM, AutoTokenizer
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.float16, device_map="auto")
+        dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+        self.model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=dtype, device_map="auto")
+        self.model.eval()
 
     def __call__(self, obs: FairRecoveryObservation) -> FairRecoveryAction:
         if obs.day > 10: return FairRecoveryAction(action_type=ActionType.SUBMIT)
