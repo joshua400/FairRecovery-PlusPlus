@@ -251,44 +251,44 @@ We trained using GRPO with Unsloth acceleration.
   - **Outcome:** Loss decreased steadily over time while reward converged.
 
 📊 **Training Loss (Curriculum)**
-![Training Loss](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus/resolve/main/evidence/plots/training_loss.png)
+![Training Loss](evidence/plots/training_loss.png)
 *Figure: The agent steadily converges its policy over the curriculum.*
 
 ### 🏆 The Winning Metric: Dual-Model Comparison
 
-![Model Comparison](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus/resolve/main/evidence/plots/model_comparison.png)
+![Model Comparison](evidence/plots/model_comparison.png)
 *Figure 1: Comparison between Baseline, Llama-1B, and Qwen-7B. Our Premium Qwen-7B agent reaches a near-perfect **0.912 Equity Index**.*
 
 ### 📈 Training & Strategy Results
 
 **Baseline vs Trained (Qwen)**
-![Training Results](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus/resolve/main/evidence/plots/training_results.png)
+![Training Results](evidence/plots/training_results.png)
 *Figure 2: 57% reward improvement.*
 
 **Reward Heatmap**
-![Score Heatmap](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus/resolve/main/evidence/plots/score_heatmap.png)
+![Score Heatmap](evidence/plots/score_heatmap.png)
 *Figure 3: Consistency across episodes.*
 
 **Fairness-Utility Frontier**
-![Utility vs Fairness](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus/resolve/main/evidence/plots/utility_vs_fairness.png)
+![Utility vs Fairness](evidence/plots/utility_vs_fairness.png)
 **Extended Training Metrics**
-![Extra Metrics](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus/resolve/main/evidence/plots/training_metrics_extra.png)
+![Extra Metrics](evidence/plots/training_metrics_extra.png)
 **Advanced Stability Analysis**
-![Extra Metrics 2](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus/resolve/main/evidence/plots/training_metrics_extra_2.png)
+![Extra Metrics 2](evidence/plots/training_metrics_extra_2.png)
 *Figure 6: Advanced stability and variance analysis across multi-seed runs.*
 
 ### ⏱️ Execution Dynamics (Step-by-Step)
 
-![Fairness Improvement](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus/resolve/main/evidence/plots/fairness_vs_episode.png)
+![Fairness Improvement](evidence/plots/fairness_vs_episode.png)
 *Figure 7: Global Fairness achievement trend over 32 training cycles.*
 
-![Component Rewards](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus/resolve/main/evidence/plots/component_rewards.png)
+![Component Rewards](evidence/plots/component_rewards.png)
 *Figure 8: Decomposed reward components showing the sacrifice of immediate utility for long-term equity.*
 
-![Reward vs Steps](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus/resolve/main/evidence/plots/reward_vs_steps.png)
+![Reward vs Steps](evidence/plots/reward_vs_steps.png)
 *Figure 9: Performance stability during the 10-day recovery window.*
 
-![Fairness vs Steps](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus/resolve/main/evidence/plots/fairness_vs_steps.png)
+![Fairness vs Steps](evidence/plots/fairness_vs_steps.png)
 *Figure 10: Cumulative equity growth per action.*
 
 ---

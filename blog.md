@@ -44,6 +44,20 @@ We trained two models using GRPO (TRL + Unsloth), comparing them against a greed
 | **Avg Final Utility**  | 0.545 | 0.712 | **0.808** (+48%) |
 | **Strategy discovered** | Always Zone 0 | Vulnerable-first | Strategic-equitable |
 
+### 📈 Visual Evidence
+
+**Dual-Model Comparison**
+![Model Comparison](evidence/plots/model_comparison.png)
+*Figure 1: Comparison between Baseline, Llama-1B, and Qwen-7B.*
+
+**Baseline vs Trained (Qwen)**
+![Training Results](evidence/plots/training_results.png)
+*Figure 2: 57% reward improvement.*
+
+**Fairness-Utility Frontier**
+![Utility vs Fairness](evidence/plots/utility_vs_fairness.png)
+*Figure 3: Escaping the greed trap.*
+
 The trained agents spontaneously discovered a "**medical-first equity**" strategy: deploy medical resources to the highest-vulnerability zones first, then return to efficiency-optimized zones. This is exactly the pattern that disaster recovery experts recommend — and the agents learned it from reward signals alone.
 
 ---

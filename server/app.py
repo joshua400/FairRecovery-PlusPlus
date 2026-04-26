@@ -152,9 +152,10 @@ def _build_app():
             fair_img = base_path + "fairness_vs_episode.png"
             comp_img = base_path + "component_rewards.png"
             model_comp_img = base_path + "model_comparison.png"
-            reward_img = base_path + "reward_vs_episode.png"
             reward_steps_img = base_path + "reward_vs_steps.png"
             fairness_steps_img = base_path + "fairness_vs_steps.png"
+            extra_img = base_path + "training_metrics_extra.png"
+            extra_img_2 = base_path + "training_metrics_extra_2.png"
 
             with gr.Row():
                 gr.Image(model_comp_img, label="Model Comparison (Llama vs Qwen)")
@@ -170,6 +171,9 @@ def _build_app():
             with gr.Row():
                 gr.Image(reward_steps_img, label="Reward vs Steps")
                 gr.Image(fairness_steps_img, label="Fairness vs Steps")
+            with gr.Row():
+                gr.Image(extra_img, label="Extended Metrics (Figure 5)")
+                gr.Image(extra_img_2, label="Stability Analysis (Figure 6)")
 
         with gr.Tab("README"):
             readme_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "README.md")
