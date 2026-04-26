@@ -172,6 +172,12 @@ LLM Agent (GRPO trained)
 
 *Figure 5: Total Fairness Score across episodes. The training successfully pushed the agent to consider vulnerable zones, resulting in a consistent upward trend in equity achievement.*
 
+### Reward Component Breakdown
+
+![Component Rewards](assets/component_rewards.png)
+
+*Figure 6: Decomposed reward components (Utility vs Fairness). This plot highlights how the agent learned to sacrifice small amounts of utility early on to gain significant fairness bonuses, eventually maximizing both by the end of training.*
+
 ### Key Numbers
 
 | Metric | Greedy Baseline | Sarvam-105B Trained | Δ |

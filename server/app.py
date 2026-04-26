@@ -112,6 +112,7 @@ def _build_app():
             heatmap_img = os.path.join(base_dir, "assets", "score_heatmap.png")
             loss_img = os.path.join(base_dir, "assets", "training_loss.png")
             fair_img = os.path.join(base_dir, "assets", "fairness_vs_episode.png")
+            comp_img = os.path.join(base_dir, "assets", "component_rewards.png")
 
             with gr.Row():
                 gr.Image(results_img if os.path.exists(results_img) else None, label="Trained vs Baseline")
@@ -119,6 +120,8 @@ def _build_app():
             with gr.Row():
                 gr.Image(loss_img if os.path.exists(loss_img) else None, label="Reward Convergence")
                 gr.Image(fair_img if os.path.exists(fair_img) else None, label="Fairness Improvement")
+            with gr.Row():
+                gr.Image(comp_img if os.path.exists(comp_img) else None, label="Component Breakdown (Utility vs Fairness)")
 
         with gr.Tab("README"):
             readme_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "README.md")
