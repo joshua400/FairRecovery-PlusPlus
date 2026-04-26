@@ -46,6 +46,17 @@ A greedy agent always picks Zone 0 (quick ROI, easy reward). A fairness-aware ag
 
 ---
 
+## 🤗 Trained Models
+
+We provide two pre-trained models optimized for this environment using GRPO (TRL + Unsloth):
+
+*   **Premium Agent (Qwen-7B)**: [Joshua1702/fairrecovery-Qwen2.5-7B-GRPO](https://huggingface.co/Joshua1702/fairrecovery-Qwen2.5-7B-GRPO)  
+    *Best for complex reasoning and near-perfect fairness (Equity: 0.912).*
+*   **Efficient Agent (Llama-1B)**: [Joshua1702/fairrecovery-Llama-3.2-1B](https://huggingface.co/Joshua1702/fairrecovery-Llama-3.2-1B)  
+    *Best for low-latency edge deployment with strong equity performance (Equity: 0.840).*
+
+---
+
 ## 🏗️ Architecture
 
 ```
@@ -185,6 +196,14 @@ We trained two variants of the FairRecovery agent: an efficient **Llama-1B** and
 ![Component Rewards](asset_final/plots/component_rewards.png)
 
 *Figure 7: Decomposed reward components (Utility vs Fairness). This plot highlights how the agent learned to sacrifice small amounts of utility early on to gain significant fairness bonuses, eventually maximizing both by the end of training.*
+
+### ⏱️ Step-Level Execution Analysis
+
+![Reward vs Steps](asset_final/plots/reward_vs_steps.png)
+*Figure 8: Reward per step within an episode. The trained agent maintains stable positive rewards even in the difficult middle stages.*
+
+![Fairness vs Steps](asset_final/plots/fairness_vs_steps.png)
+*Figure 9: Cumulative Fairness per step. The agent builds equity linearly by consistently choosing vulnerable zones across the entire episode.*
 
 
 ### Key Numbers
