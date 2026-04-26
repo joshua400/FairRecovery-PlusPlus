@@ -8,7 +8,7 @@ dist/
 build/
 .env
 .venv/
-plots/
+/plots/
 grpo_output/
 *.zip
 Reffrence project/
