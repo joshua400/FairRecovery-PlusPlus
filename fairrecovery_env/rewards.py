@@ -43,14 +43,10 @@ class RewardEngine:
 
     def compute_reward(self, action: FairRecoveryAction, state: FairRecoveryState) -> tuple[float, str]:
         """Compute reward for a single agent action."""
-        # This is a generic wrapper that handles analyze/allocate. 
-        # For 'execute', we call compute_execute_step separately.
-        
         reward = 0.0
         feedback_parts: list[str] = []
         self._step_count += 1
 
-        # 1. Action Type History (Penalty for repetition)
         action_repr = action.action_type.value
         recent = self._action_history[-3:]
         if len(recent) >= 3 and all(a == action_repr for a in recent):
@@ -58,14 +54,11 @@ class RewardEngine:
             feedback_parts.append("System is stagnating.")
         self._action_history.append(action_repr)
 
-        # 2. Heuristic Penalties
         if action.action_type == "allocate" and not action.allocations:
             reward += PENALTY_SAFETY_VIOLATION
             feedback_parts.append("Budget is unspent.")
 
-        # 3. Phase Specific Reward Signal
         if action.action_type == "analyze":
-            # Small positive signal for analyzing critical zones
             reward += 0.05
         
         self._cumulative_reward += reward
@@ -80,17 +73,12 @@ class RewardEngine:
     ) -> RewardComponents:
         """Detailed execution reward with fairness trap detection."""
         
-        # 1. Utility (Execution Reward)
-        # Reward for reducing damage across all zones
         R_exec = 0.0
         for zone in state.zones:
             R_exec += (1.0 - zone.damage)
         R_exec /= len(state.zones)
 
-        # 2. Fairness (Persistent Ignore Logic)
         vuln_zone_ids = {z.zone_id for z in state.zones if z.vulnerable_ratio > 0.6}
-        
-        # Check if any vulnerable zone was served this step
         zone_served = bool(vuln_zone_ids & allocated_zone_ids)
         
         if vuln_zone_ids:
@@ -102,12 +90,8 @@ class RewardEngine:
                 self._vulnerable_ignored_days = max(0, self._vulnerable_ignored_days - 1)
 
         R_fair = self._compute_equity(state.zones)
-        
-        # 3. Safety (Violations)
-        R_safe = 1.0 - (len(violations) * 0.1)
-        R_safe = max(-1.0, R_safe)
+        R_safe = max(-1.0, 1.0 - (len(violations) * 0.1))
 
-        # Composite Total
         w = REWARD_WEIGHTS
         R_total = (
             w["exec"] * R_exec +
@@ -134,7 +118,6 @@ class RewardEngine:
         """Compute the 'Honest Truth' terminal score."""
         avg_damage = sum(z.damage for z in state.zones) / len(state.zones)
         utility = 1.0 - avg_damage
-        
         equity = self._compute_equity(state.zones)
         safety = max(0.0, 1.0 - (state.violations_total / 10.0))
 
@@ -154,3 +137,11 @@ class TaskGrader:
 
     def grade(self, state: FairRecoveryState) -> float:
         return self._engine.get_final_score(state)
+
+def compute_fairness_reward(zones: List[ZoneState]) -> float:
+    """Standalone helper for fairness calculation."""
+    services = [z.service for z in zones]
+    mean_svc = sum(services) / len(services)
+    if mean_svc == 0: return 0.5
+    mad = sum(abs(s - mean_svc) for s in services) / len(services)
+    return 1.0 - mad
