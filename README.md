@@ -7,7 +7,7 @@ sdk: docker
 pinned: false
 ---
 
-# 🏙️ FairRecovery++ — Post-Disaster City Recovery RL Environment
+# 🏙️ FairRecovery++: Teaching LLMs to Make Fair Disaster Recovery Decisions
 
 [![Llama-1B](https://img.shields.io/badge/Model-Llama--3.2--1B-orange)](https://huggingface.co/Joshua1702/fairrecovery-Llama-3.2-1B)
 [![Qwen-7B](https://img.shields.io/badge/Model-Qwen--2.5--7B-purple)](https://huggingface.co/Joshua1702/fairrecovery-Qwen2.5-7B-GRPO)
@@ -15,34 +15,36 @@ pinned: false
 [![Theme](https://img.shields.io/badge/Theme-3.1%20%7C%202-orange)](https://huggingface.co/openenv)
 [![Space](https://img.shields.io/badge/🤗%20Space-Live-green)](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus)
 
-> **Train an LLM to make fair disaster recovery decisions — where helping wealthy zones first systematically abandons the most vulnerable people.**
+When disaster strikes — floods in Chennai, earthquakes, hurricanes — city authorities face an impossible-looking problem: limited crews, limited budget, dozens of damaged neighborhoods, and no time. Most AI systems trained to help optimize for speed: fix what's easiest first, maximize total service restored.
+
+The problem? **Easy to fix almost always means wealthy.** The informal settlements, the elderly care facilities, and the low-income neighborhoods that took the hardest hit? They wait the longest.
+
+We built **FairRecovery++** to train LLM agents that escape this trap using **GRPO (Group Relative Policy Optimization)**.
 
 ---
 
-## 🌊 The Problem
+## What is FairRecovery++?
 
-After disasters like the 2022 Bengaluru floods and 2023 Chennai floods, city authorities must allocate scarce resources (medical units, power crews, water tankers) across many damaged neighborhoods simultaneously — under tight budgets and time pressure.
+FairRecovery++ is an [OpenEnv](https://github.com/meta-pytorch/OpenEnv) RL environment where an AI agent acts as a post-disaster Recovery Planner for a simulated city of 5 zones. Each episode spans 10 simulated recovery days. The agent must:
 
-The trap every naive AI falls into: **optimising for speed means fixing the easiest zones first**, which are almost always the wealthiest. Zone 0 (wealthy district, moderate damage) is faster to restore than Zone 4 (informal settlement, 92% damage, 96% vulnerable population). A greedy agent picks Zone 0 every time — and Zone 4 stays dark for days.
+1. **Analyze** which zones are most critically damaged.
+2. **Allocate** limited resources (medical units, power crews, water tankers, housing repairs).
+3. **Execute** the allocation and observe the outcome.
+4. Repeat across multiple days, then **submit** a final recovery plan.
 
-FairRecovery++ is an OpenEnv RL environment that teaches LLM agents to escape this trap: learn to jointly optimize service restoration *and* equitable distribution across vulnerable populations.
-
-**Primary Theme: 3.1 — Real-World Professional Tasks**  
-**Secondary Theme: 2 — Long-Horizon Planning & Instruction Following**
+The environment rewards the agent not just for total service restored, but for **equitable** service restored — measured by the gap between how well vulnerable zones are served versus non-vulnerable ones.
 
 ---
 
-## 🎯 The Fairness Trap (Hard Scenario)
+## 🎯 The Fairness Trap
 
-| Zone | Damage | Service | Vulnerable Pop | Priority? |
-|------|--------|---------|----------------|-----------|
-| Zone 0 (wealthy) | 35% | 65% | 8% | ❌ Easy but low need |
-| Zone 1 | 50% | 50% | 40% | Medium |
-| Zone 2 | 60% | 40% | 55% | Medium |
-| Zone 3 (poor) | 72% | 28% | 72% | High |
-| **Zone 4 (informal)** | **92%** | **8%** | **96%** | ✅ **Must prioritize** |
+The hard scenario is deliberately designed with a trap:
+- **Zone 0** (wealthy district): 35% damage, easy to fix, 8% vulnerable population.
+- **Zone 4** (informal settlement): 92% damage, 96% vulnerable population.
 
-A greedy agent always picks Zone 0 (quick ROI, easy reward). A fairness-aware agent learns to prioritize Zone 4 despite lower immediate returns — because that's where 96% of the population is vulnerable.
+A naive utility-maximizing agent always picks Zone 0: lower cost, faster payoff, higher immediate reward. Zone 4 gets ignored.
+
+Our trained **Qwen-7B** and **Llama-3.2-1B** agents learn to prioritize Zone 4 — because its 96% vulnerable population deserves equitable access to recovery services, even if it costs more per unit of service gained.
 
 ---
 
