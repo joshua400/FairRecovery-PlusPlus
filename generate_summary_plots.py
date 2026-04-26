@@ -61,7 +61,7 @@ def training_results_bar(rows: Dict[str, List[Dict]], out: Path) -> None:
     x = np.arange(len(labels))
     width = 0.35
     axes[0].bar(x - width / 2, base_vals, width, label="Baseline", color="#9aa0a6")
-    axes[0].bar(x + width / 2, trained_vals, width, label="Trained (sarvam-105b)", color="#1a73e8")
+    axes[0].bar(x + width / 2, trained_vals, width, label="Trained (Qwen-7B-GRPO)", color="#1a73e8")
     axes[0].set_xticks(x)
     axes[0].set_xticklabels(labels, rotation=15, ha="right")
     axes[0].set_ylabel("Score (0-1)")
@@ -140,7 +140,7 @@ def training_loss(rows: Dict[str, List[Dict]], out: Path) -> None:
 
     fig, ax = plt.subplots(figsize=(11, 4.5))
     ax.plot(range(1, len(base) + 1), _ma(base), label="Baseline (greedy heuristic)", color="#9aa0a6", linewidth=2)
-    ax.plot(range(1, len(trained) + 1), _ma(trained), label="Trained (sarvam-105b + bandit)", color="#1a73e8", linewidth=2)
+    ax.plot(range(1, len(trained) + 1), _ma(trained), label="Trained (Qwen-7B-GRPO)", color="#1a73e8", linewidth=2)
     ax.fill_between(range(1, len(trained) + 1), _ma(trained), _ma(base), alpha=0.15, color="#1a73e8")
     ax.set_xlabel("Episode")
     ax.set_ylabel("Curriculum Reward (4-ep moving avg)")
