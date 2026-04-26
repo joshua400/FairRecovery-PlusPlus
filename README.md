@@ -142,49 +142,50 @@ LLM Agent (GRPO trained)
 
 ## 📊 Training Results
 
-### Reward: Baseline vs Trained Agent
-
-![Training Results](asset_final/plots/training_results.png)
-
-*Bar chart: Avg Curriculum Reward, Avg Final Utility, Avg Final Fairness — baseline (grey) vs Qwen-7B trained (blue) across 32 episodes.*
-
-### Per-Episode Reward Heatmap
-
-![Score Heatmap](asset_final/plots/score_heatmap.png)
-
-*Figure 2: Heatmap showing per-episode rewards. The bottom row (trained agent) shows higher sustained rewards in the critical middle-to-late days of recovery compared to the baseline.*
-
-### Reward Curve Over Training
-
-![Training Loss](asset_final/plots/training_loss.png)
-
-*Figure 3: 4-episode moving average. The Qwen-7B agent steadily learns to capture both service restoration and fairness bonuses, outperforming the heuristic greedy baseline after ~20 iterations.*
-
-### Utility vs Fairness Trade-off
-
-![Utility vs Fairness](asset_final/plots/utility_vs_fairness.png)
-
-*Figure 4: Intersectional analysis showing the agent's progress. Unlike greedy agents that cluster in the high-utility/low-fairness quadrant, our trained agent successfully moves towards the 'balanced' zone.*
-
-### Fairness Progress
-
-![Fairness Improvement](asset_final/plots/fairness_vs_episode.png)
-
-*Figure 5: Total Fairness Score across episodes. The training successfully pushed the agent to consider vulnerable zones, resulting in a consistent upward trend in equity achievement.*
-
-### Reward Component Breakdown
-
-![Component Rewards](asset_final/plots/component_rewards.png)
-
-*Figure 6: Decomposed reward components (Utility vs Fairness). This plot highlights how the agent learned to sacrifice small amounts of utility early on to gain significant fairness bonuses, eventually maximizing both by the end of training.*
-
-### 🏆 Dual-Model Performance Comparison
+### 🏆 Dual-Model Performance Comparison (Llama-1B vs Qwen-7B)
 
 We trained two variants of the FairRecovery agent: an efficient **Llama-1B** and a high-reasoning **Qwen-7B**.
 
 ![Model Comparison](asset_final/plots/model_comparison.png)
 
-*Figure 1: Cross-model comparison showing Equity Index (Fairness), Reward, and Utility. Larger models like Qwen-7B achieve near-perfect equity by better interpreting the complex trade-offs between speed and fairness.*
+*Figure 1: Cross-model comparison showing Equity Index (Fairness), Reward, and Utility. Qwen-7B achieves near-perfect equity (0.912) by better interpreting the complex trade-offs.*
+
+### Reward: Baseline vs Trained Agent (Qwen-7B)
+
+![Training Results](asset_final/plots/training_results.png)
+
+*Figure 2: Avg Curriculum Reward, Avg Final Utility, Avg Final Fairness — baseline (grey) vs Qwen-7B trained (blue) across 32 episodes.*
+
+### Per-Episode Reward Heatmap
+
+![Score Heatmap](asset_final/plots/score_heatmap.png)
+
+*Figure 3: Heatmap showing per-episode rewards. The bottom row (trained agent) shows higher sustained rewards in the critical middle-to-late days of recovery compared to the baseline.*
+
+### Reward Curve Over Training
+
+![Training Loss](asset_final/plots/training_loss.png)
+
+*Figure 4: 4-episode moving average. The Qwen-7B agent steadily learns to capture both service restoration and fairness bonuses, outperforming the heuristic greedy baseline after ~20 iterations.*
+
+### Utility vs Fairness Trade-off
+
+![Utility vs Fairness](asset_final/plots/utility_vs_fairness.png)
+
+*Figure 5: Intersectional analysis showing the agent's progress. Unlike greedy agents that cluster in the high-utility/low-fairness quadrant, our trained agent successfully moves towards the 'balanced' zone.*
+
+### Fairness Progress
+
+![Fairness Improvement](asset_final/plots/fairness_vs_episode.png)
+
+*Figure 6: Total Fairness Score across episodes. The training successfully pushed the agent to consider vulnerable zones, resulting in a consistent upward trend in equity achievement.*
+
+### Reward Component Breakdown
+
+![Component Rewards](asset_final/plots/component_rewards.png)
+
+*Figure 7: Decomposed reward components (Utility vs Fairness). This plot highlights how the agent learned to sacrifice small amounts of utility early on to gain significant fairness bonuses, eventually maximizing both by the end of training.*
+
 
 ### Key Numbers
 
@@ -230,53 +231,38 @@ for day in range(5):
 ### Run training (Colab)
 Open `train_COMPLETE.ipynb` — runs on free Colab T4 in ~10 minutes.
 
----
+## 📁 Project Layout & Resources
 
-## 📁 Project Structure
-
+### Repository Structure
 ```
-fairrecovery_env/
-├── constants.py          # REWARD_WEIGHTS, RESOURCE_COSTS, thresholds
-├── models.py             # Pydantic v2 Action / Observation / State
-├── state.py              # CityState + ZoneState (mutable world model)
-├── tasks.py              # 3 scenarios: easy / medium / hard (fairness trap)
-├── rewards.py            # 5-component RLVR reward engine (pure functions)
+fairrecovery_env/         # 🧠 Core OpenEnv Engine
+├── constants.py          # Reward weights & thresholds
+├── models.py             # Pydantic v2 Action/Obs/State
+├── rewards.py            # 5-component RLVR reward engine
 ├── rubrics.py            # RFC 004 composable rubrics
-├── shield.py             # Safety validator (blocks before mutation)
-└── __init__.py           # Package exports
+└── ...                  # CityState, Tasks, Shield validator
 
-server/
-├── fairrecovery_environment.py   # OpenEnv Environment class
-└── app.py                        # FastAPI + OpenEnv integration + Gradio UI
+server/                   # 🚀 Deployment & UI
+├── app.py                # FastAPI + Gradio Web Dashboard
+└── fairrecovery_env.py   # OpenEnv Environment Wrapper
 
-client.py                 # Typed HTTP client
-inference.py              # Baseline policies (greedy, fairness-aware, random, HF LLM)
-train_COMPLETE.ipynb      # GRPO training notebook (TRL + Unsloth)
-generate_summary_plots.py # Reproduce all plots from episode_log.csv
-docs/                     # Final project documentation and blog post
+asset_final/              # 📊 Final Evidence & Model Adapters
+├── plots/                # Consolidated training visualizations
+└── model/                # LoRA adapter weights (Qwen-7B)
 
----
+docs/                     # 📝 Documentation & Reports
+├── train_llama_final.ipynb # Llama-1B GRPO Notebook
+└── train_qwen_final.ipynb  # Qwen-7B GRPO Notebook
+```
 
-## 🤗 Models
-We provide two pre-trained models for this environment, both trained using GRPO (TRL + Unsloth).
-
-1. **Premium Agent (Best):** [Joshua1702/fairrecovery-Qwen2.5-7B-GRPO](https://huggingface.co/Joshua1702/fairrecovery-Qwen2.5-7B-GRPO)
-   - Highest equity index (0.912).
-   - Superior reasoning for long-horizon resource management.
-2. **Efficient Agent:** [Joshua1702/fairrecovery-Llama-3.2-1B](https://huggingface.co/Joshua1702/fairrecovery-Llama-3.2-1B)
-   - Excellent performance for its size (0.840 equity).
-   - Low latency, suitable for real-time edge deployment.
-
----
-
-## 🔗 Materials
+### 🔗 Key Materials
 
 | Resource | Link |
 |----------|------|
-| 🤗 **Live Environment (HF Space)** | [Joshua1702/FairRecovery-PlusPlus](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus) |
-| 💻 **GitHub Repository** | [joshua400/FairRecovery-PlusPlus](https://github.com/joshua400/FairRecovery-PlusPlus) |
-| 📓 **Llama 1B Training (Final)** | [Notebook](docs/train_llama_final.ipynb) [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/joshua400/FairRecovery-PlusPlus/blob/main/docs/train_llama_final.ipynb) |
-| 📓 **Qwen 7B Training (Final)** | [Notebook](docs/train_qwen_final.ipynb) [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/joshua400/FairRecovery-PlusPlus/blob/main/docs/train_qwen_final.ipynb) |
+| 🤗 **Live Space** | [Joshua1702/FairRecovery-PlusPlus](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus) |
+| 💻 **GitHub** | [joshua400/FairRecovery-PlusPlus](https://github.com/joshua400/FairRecovery-PlusPlus) |
+| 📓 **Llama Training** | [Notebook](docs/train_llama_final.ipynb) [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/joshua400/FairRecovery-PlusPlus/blob/main/docs/train_llama_final.ipynb) |
+| 📓 **Qwen Training** | [Notebook](docs/train_qwen_final.ipynb) [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/joshua400/FairRecovery-PlusPlus/blob/main/docs/train_qwen_final.ipynb) |
 | 📝 **HF Blog Post** | [HF_blog_post.md](docs/HF_blog_post.md) |
 
 ---
