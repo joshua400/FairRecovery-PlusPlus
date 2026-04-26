@@ -13,6 +13,8 @@ pinned: false
 
 💡 Solution: FairRecovery++ trains LLMs to make recovery decisions that are both efficient AND fair.
 
+> **We didn’t just train an agent to recover cities — we trained it to recover them fairly.**
+
 [![Llama-1B](https://img.shields.io/badge/Model-Llama--3.2--1B-orange)](https://huggingface.co/Joshua1702/fairrecovery-Llama-3.2-1B)
 [![Qwen-7B](https://img.shields.io/badge/Model-Qwen--2.5--7B-purple)](https://huggingface.co/Joshua1702/fairrecovery-Qwen2.5-7B-GRPO)
 [![Qwen-1.5B](https://img.shields.io/badge/Model-Qwen--2.5--1.5B-blue)](https://www.kaggle.com/code/joshuaragiland/fairevlo-lite)
@@ -89,6 +91,8 @@ This makes fairness:
 - ✔ hard to game
 
 This ensures fairness cannot be faked — improving fairness requires real redistribution of resources.
+
+> **Note:** Typical fairness ranges from **0.70–0.95** across complex scenarios; we intentionally avoid saturation to ensure the metric remains sensitive to real-world trade-offs.
 
 ---
 
@@ -240,7 +244,7 @@ In this section, we highlight the most critical performance metrics and fairness
 We trained using GRPO with Unsloth acceleration.
 
 - **Models:** Llama-3.2-1B, Qwen-2.5-1.5B, & Qwen-2.5-7B (4-bit)
-- **Iteration Strategy:** We intentionally used a smaller model (Llama-1B) for rapid iteration and stable learning, then scaled to Qwen-7B for final performance.
+- **Iteration Strategy:** We use smaller models (Llama-1B, Qwen-1.5B) for rapid iteration and stable learning, then scale to Qwen-7B for final performance.
 - **Qwen-1.5B Quick-Test:**
   - **Episodes:** 20–50 (multiple seeds)
   - **Runtime:** < 20 min on T4 (Kaggle)
