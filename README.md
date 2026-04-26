@@ -9,6 +9,7 @@ pinned: false
 
 # 🏙️ FairRecovery++ — Post-Disaster City Recovery RL Environment
 
+[![Model](https://img.shields.io/badge/Model-fairrecovery--llama--1b-orange)](https://huggingface.co/Joshua1702/fairrecovery-llama-1b-grpo)
 [![OpenEnv](https://img.shields.io/badge/OpenEnv-compliant-blue)](https://github.com/meta-pytorch/OpenEnv)
 [![Theme](https://img.shields.io/badge/Theme-3.1%20%7C%202-orange)](https://huggingface.co/openenv)
 [![Space](https://img.shields.io/badge/🤗%20Space-Live-green)](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus)
