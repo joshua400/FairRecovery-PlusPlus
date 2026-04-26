@@ -58,16 +58,19 @@ def _build_app():
         try:
             if policy_type == "Live LLM (Llama-3)":
                 if not hf_token or hf_token.strip() == "":
-                    return "### ❌ Error\nPlease provide a Hugging Face Token in the sidebar to use the Live LLM.", ""
+                    yield "### ❌ Error\nPlease provide a Hugging Face Token in the sidebar to use the Live LLM.", ""
+                    return
                 policy_fn = HFInferencePolicy(token=hf_token)
             elif "Qwen" in policy_type:
                 if _trained_qwen is None:
-                    logs.append("⏳ *Loading Trained Qwen-7B model into GPU...*")
+                    logs.append("⏳ *Loading Trained Qwen-7B model into GPU (this takes ~1 minute)...*")
+                    yield "\n".join(logs), "### ⏳ Initializing Model..."
                     _trained_qwen = TrainedInferencePolicy(model_name="Joshua1702/fairrecovery-Qwen2.5-7B-GRPO")
                 policy_fn = _trained_qwen
             elif "Llama-1B-GRPO" in policy_type:
                 if _trained_llama is None:
-                    logs.append("⏳ *Loading Trained Llama-1B model into GPU...*")
+                    logs.append("⏳ *Loading Trained Llama-1B model into GPU (this takes ~30 seconds)...*")
+                    yield "\n".join(logs), "### ⏳ Initializing Model..."
                     _trained_llama = TrainedInferencePolicy(model_name="Joshua1702/fairrecovery-llama-1b-grpo")
                 policy_fn = _trained_llama
             elif policy_type == "Baseline (Greedy)":
@@ -76,23 +79,29 @@ def _build_app():
                 policy_fn = fairness_aware_policy
         except Exception as e:
             logs.append(f"❌ **Model Error:** {str(e)}")
-            return "\n".join(logs), f"### ❌ Initialization Failed\nCheck logs for details."
+            yield "\n".join(logs), f"### ❌ Initialization Failed\nCheck logs for details."
+            return
         
         done = False
-        while not done:
-            action = policy_fn(obs)
-            prev_obs = obs
-            obs = env.step(action)
-            _logger.log_step(prev_obs, action, obs.reward)
-            
-            if action.action_type == "execute":
-                logs.append(f"✅ **Day {obs.day-1} Complete** (Equity: {obs.fairness_score:.2f})")
-            
-            done = obs.done
+        try:
+            while not done:
+                action = policy_fn(obs)
+                prev_obs = obs
+                obs = env.step(action)
+                _logger.log_step(prev_obs, action, obs.reward)
+                
+                if action.action_type == "execute":
+                    logs.append(f"✅ **Day {obs.day-1} Complete** (Equity: {obs.fairness_score:.2f})")
+                    yield "\n".join(logs), f"### ⏳ Simulating Day {obs.day}..."
+                
+                done = obs.done
 
-        res_eval = "🟢 **EQUITY ACHIEVED**" if obs.fairness_score > 0.8 else "🔴 **NEGLECT DETECTED**"
-        result_text = f"### 🏆 FINAL OUTCOME\n- **Reward:** {obs.cumulative_reward:.3f}\n- **Equity Index:** {obs.fairness_score:.3f}\n\n{res_eval}"
-        return "\n".join(logs), result_text
+            res_eval = "🟢 **EQUITY ACHIEVED**" if obs.fairness_score > 0.8 else "🔴 **NEGLECT DETECTED**"
+            result_text = f"### 🏆 FINAL OUTCOME\n- **Reward:** {obs.cumulative_reward:.3f}\n- **Equity Index:** {obs.fairness_score:.3f}\n\n{res_eval}"
+            yield "\n".join(logs), result_text
+        except Exception as e:
+            logs.append(f"❌ **Simulation Error:** {str(e)}")
+            yield "\n".join(logs), f"### ❌ Simulation Failed"
 
     with gr.Blocks(title="FairRecovery++", theme=gr.themes.Soft()) as gradio_app:
         gr.Markdown("# 🏗️ FairRecovery++: Disaster Response Simulator")
