@@ -122,14 +122,17 @@ def _build_app():
         with gr.Tab("Analysis & Fairness"):
             gr.Markdown("## 📊 Training Results & Fairness Trends")
             
-            # Use absolute HF URLs to bypass any local filesystem/Docker mount issues
-            base_url = "https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus/resolve/main/evidence/plots/"
-            results_img = base_url + "training_results.png"
-            heatmap_img = base_url + "score_heatmap.png"
-            loss_img = base_url + "training_loss.png"
-            fair_img = base_url + "fairness_vs_episode.png"
-            comp_img = base_url + "component_rewards.png"
-            model_comp_img = base_url + "model_comparison.png"
+            # Use local relative paths - Gradio serves these correctly from the root
+            base_path = "evidence/plots/"
+            results_img = base_path + "training_results.png"
+            heatmap_img = base_path + "score_heatmap.png"
+            loss_img = base_path + "training_loss.png"
+            fair_img = base_path + "fairness_vs_episode.png"
+            comp_img = base_path + "component_rewards.png"
+            model_comp_img = base_path + "model_comparison.png"
+            reward_img = base_path + "reward_vs_episode.png"
+            reward_steps_img = base_path + "reward_vs_steps.png"
+            fairness_steps_img = base_path + "fairness_vs_steps.png"
 
             with gr.Row():
                 gr.Image(model_comp_img, label="Model Comparison (Llama vs Qwen)")
@@ -138,9 +141,13 @@ def _build_app():
                 gr.Image(heatmap_img, label="Episode Rewards")
             with gr.Row():
                 gr.Image(loss_img, label="Reward Convergence")
-                gr.Image(fair_img, label="Fairness Improvement")
+                gr.Image(reward_img, label="Reward vs Episode")
             with gr.Row():
-                gr.Image(comp_img, label="Component Breakdown (Utility vs Fairness)")
+                gr.Image(fair_img, label="Fairness vs Episode")
+                gr.Image(comp_img, label="Component Breakdown")
+            with gr.Row():
+                gr.Image(reward_steps_img, label="Reward vs Steps")
+                gr.Image(fairness_steps_img, label="Fairness vs Steps")
 
         with gr.Tab("README"):
             readme_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "README.md")
