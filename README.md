@@ -152,13 +152,25 @@ LLM Agent (GRPO trained)
 
 ![Score Heatmap](assets/score_heatmap.png)
 
-*Each column is one episode. Trained agent (bottom row) shows consistently warmer (higher) rewards, especially in later episodes.*
+*Figure 2: Heatmap showing per-episode rewards. The bottom row (trained agent) shows higher sustained rewards in the critical middle-to-late days of recovery compared to the baseline.*
 
 ### Reward Curve Over Training
 
 ![Training Loss](assets/training_loss.png)
 
-*4-episode moving average. Trained agent steadily improves above greedy baseline.*
+*Figure 3: 4-episode moving average. The Sarvam-105B agent steadily learns to capture both service restoration and fairness bonuses, outperforming the heuristic greedy baseline after ~20 iterations.*
+
+### Utility vs Fairness Trade-off
+
+![Utility vs Fairness](assets/utility_vs_fairness.png)
+
+*Figure 4: Intersectional analysis showing the agent's progress. Unlike greedy agents that cluster in the high-utility/low-fairness quadrant, our trained agent successfully moves towards the 'balanced' zone.*
+
+### Fairness Progress
+
+![Fairness Improvement](assets/fairness_vs_episode.png)
+
+*Figure 5: Total Fairness Score across episodes. The training successfully pushed the agent to consider vulnerable zones, resulting in a consistent upward trend in equity achievement.*
 
 ### Key Numbers
 

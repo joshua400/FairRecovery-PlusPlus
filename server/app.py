@@ -105,12 +105,20 @@ def _build_app():
 
         with gr.Tab("Analysis & Fairness"):
             gr.Markdown("## 📊 Training Results & Fairness Trends")
+            
+            # Use absolute filesystem paths for gr.Image
+            base_dir = os.path.dirname(os.path.dirname(__file__))
+            results_img = os.path.join(base_dir, "assets", "training_results.png")
+            heatmap_img = os.path.join(base_dir, "assets", "score_heatmap.png")
+            loss_img = os.path.join(base_dir, "assets", "training_loss.png")
+            fair_img = os.path.join(base_dir, "assets", "fairness_vs_episode.png")
+
             with gr.Row():
-                gr.Image("/assets/training_results.png", label="Trained vs Baseline")
-                gr.Image("/assets/score_heatmap.png", label="Episode Rewards")
+                gr.Image(results_img if os.path.exists(results_img) else None, label="Trained vs Baseline")
+                gr.Image(heatmap_img if os.path.exists(heatmap_img) else None, label="Episode Rewards")
             with gr.Row():
-                gr.Image("/assets/training_loss.png", label="Reward Convergence")
-                gr.Image("/assets/fairness_vs_episode.png", label="Fairness Improvement")
+                gr.Image(loss_img if os.path.exists(loss_img) else None, label="Reward Convergence")
+                gr.Image(fair_img if os.path.exists(fair_img) else None, label="Fairness Improvement")
 
         with gr.Tab("README"):
             readme_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "README.md")
