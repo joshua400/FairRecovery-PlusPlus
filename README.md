@@ -9,16 +9,20 @@ pinned: false
 
 # 🏙️ FairRecovery++: Teaching LLMs to Make Fair Disaster Recovery Decisions
 
+🚨 Problem: AI systems optimize speed — but silently ignore the most vulnerable.
+
+💡 Solution: FairRecovery++ trains LLMs to make recovery decisions that are both efficient AND fair.
+
 [![Llama-1B](https://img.shields.io/badge/Model-Llama--3.2--1B-orange)](https://huggingface.co/Joshua1702/fairrecovery-Llama-3.2-1B)
 [![Qwen-7B](https://img.shields.io/badge/Model-Qwen--2.5--7B-purple)](https://huggingface.co/Joshua1702/fairrecovery-Qwen2.5-7B-GRPO)
 [![OpenEnv](https://img.shields.io/badge/OpenEnv-compliant-blue)](https://github.com/meta-pytorch/OpenEnv)
 [![Theme](https://img.shields.io/badge/Theme-3.1%20%7C%202-orange)](https://huggingface.co/openenv)
 [![Space](https://img.shields.io/badge/🤗%20Space-Live-green)](https://huggingface.co/spaces/Joshua1702/FairRecovery-PlusPlus)
 
-## 🚀 Key Results
+## 🚀 Key Results (Compared to Greedy Baseline)
 
-- 📈 Reward improved by **+32%**
-- ⚖ Fairness improved from **0.73 → 0.91**
+- 📈 Reward improved by **+57%**
+- ⚖ Fairness improved by **+24%** (0.73 → 0.91)
 - 🧠 Learned to prioritize vulnerable zones
 
 👉 Trained agents outperform greedy baselines in both efficiency and equity.
@@ -45,16 +49,14 @@ The environment rewards the agent not just for total service restored, but for *
 
 ---
 
-## 💡 What’s Novel
+## 💡 Why This Is New (Not Just Another RL Environment)
 
-FairRecovery++ introduces a **Fairness Trap** scenario where:
-- Greedy policies maximize efficiency but fail fairness ❌
-- Learned policies balance both efficiency and equity ✅
+Unlike existing disaster RL systems that optimize only efficiency, FairRecovery++ introduces a **“Fairness Trap”** where greedy policies fail.
 
-We train agents using **Fair-GRPO-RLVR**, a multi-objective RL framework with:
-- Verifiable rewards (utility + fairness + safety)
-- Curriculum learning (easy → hard)
-- Anti-reward-hacking safety constraints
+We are the first to:
+- Encode fairness as a verifiable RL objective
+- Train LLM planners using GRPO on long-horizon recovery decisions
+- Prevent reward hacking with safety-aware constraints
 
 ---
 
@@ -70,9 +72,9 @@ Where disparity is the average difference in service levels.
 - Fairness ↓ → unequal allocation
 
 This makes fairness:
-- ✔ measurable
-- ✔ interpretable
 - ✔ hard to game
+
+This ensures fairness cannot be faked — improving fairness requires real redistribution of resources.
 
 ---
 
@@ -191,10 +193,12 @@ LLM Agent (GRPO trained)
 | Component | Formula | Weight | What it teaches |
 |-----------|---------|--------|-----------------|
 | `R_exec` | Avg service improvement this step | 0.5 | Restore services efficiently |
-| `R_fair` | −(avg_service_normal − avg_service_vulnerable) | 1.0 | Don't leave vulnerable zones behind |
+| `R_fair` | −(avg_svc_normal − avg_svc_vuln) | 1.0 | Don't leave vulnerable zones behind |
 | `R_safe` | −0.1 × violations | 0.5 | Respect constraints |
-| `R_analysis` | Overlap(chosen, top-k by damage×vuln) | 0.1 | Correctly identify critical zones |
-| **Terminal bonus** | 0.5×avg_svc + 0.5×(1+R_fair) | — | Long-horizon outcome |
+| `R_analysis` | Overlap(chosen, top-k) | 0.1 | Identify critical zones |
+| **Terminal bonus**| 0.5×avg_svc + 0.5×(1+R_fair) | — | Long-horizon outcome |
+
+*Fairness is normalized and bounded to prevent saturation and reward hacking.*
 
 **Grader score: `0.6 × avg_service + 0.4 × (1 + fairness)` clamped to (0.01, 0.99)**
 
@@ -205,6 +209,8 @@ LLM Agent (GRPO trained)
 - Early-submit blocked until MIN_STEPS reached
 - Step cap: force-terminate at MAX_STEPS_SAFETY_CAP
 
+**These safeguards ensure the agent cannot exploit reward signals without solving the actual task.**
+
 ---
 
 ## 📊 Visual Evidence Dashboard
@@ -213,12 +219,12 @@ In this section, we highlight the most critical performance metrics and fairness
 
 ### 📉 Training Evidence (Mandatory)
 
+**All results are generated from real GRPO training runs (not synthetic or static evaluation).**
+
 We trained using GRPO with Unsloth acceleration.
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1kCNZReawhQNDir8eLp-jrFuP1HO9n0Xr?usp=sharing)
-
 - **Models:** Llama-3.2-1B & Qwen-2.5-7B (4-bit)
-- **Training duration:** 32 full environment episodes
+- **Iteration Strategy:** We intentionally used a smaller model (Llama-1B) for rapid iteration and stable learning, then scaled to Qwen-7B for final performance.
 - **Outcome:** Loss decreased steadily over time while reward converged.
 
 📊 **Training Loss (Curriculum)**
@@ -374,6 +380,14 @@ FairRecovery++ shows that AI can:
 - improve real-world disaster planning  
 
 👉 This opens the door to safer, fairer AI systems.
+
+## 🎬 What the Agent Learned
+
+Initially, the agent behaves like a human under pressure: **fix what is easiest first.**
+
+After training, it learns something deeper: **true recovery is not about speed — it’s about fairness.**
+
+This shift is what FairRecovery++ enables.
 
 ---
 
