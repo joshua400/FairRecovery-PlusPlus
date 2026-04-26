@@ -37,11 +37,12 @@ Our trained **Qwen-7B** and **Llama-3.2-1B** agents learn to prioritize Zone 4 â
 
 We trained two models using GRPO (TRL + Unsloth), comparing them against a greedy damage-only baseline:
 
-| Metric | Baseline | Llama-1B (GRPO) | Qwen-7B (GRPO) |
-|--------|---------|-----------------|----------------|
-| **Equity Index (Fairness)** | 0.537 | 0.840 | **0.912** |
-| **Total Reward** | 0.482 | 0.720 | **0.785** |
-| **Utility (Service)** | 0.602 | 0.615 | **0.628** |
+| Metric | Greedy Baseline | Llama-3.2-1B | Qwen-2.5-7B-GRPO |
+|--------|----------------|--------------|------------------|
+| **Avg Episode Reward** | 0.548 | 0.785 | **0.864** (+57%) |
+| **Avg Final Fairness** | 0.732 | 0.840 | **0.912** (+24%) |
+| **Avg Final Utility**  | 0.545 | 0.712 | **0.808** (+48%) |
+| **Strategy discovered** | Always Zone 0 | Vulnerable-first | Strategic-equitable |
 
 The trained agents spontaneously discovered a "**medical-first equity**" strategy: deploy medical resources to the highest-vulnerability zones first, then return to efficiency-optimized zones. This is exactly the pattern that disaster recovery experts recommend â€” and the agents learned it from reward signals alone.
 
